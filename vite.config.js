@@ -17,8 +17,8 @@ export default {
         // This option applies to Vite 2.x, and might change in future versions
         terserOptions: {
             format: {
-            // Disable the crossorigin attribute addition
-            crossorigin: false,
+                // Disable the crossorigin attribute addition
+                crossorigin: false,
             },
         },
     },
