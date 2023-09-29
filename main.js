@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import * as CANNON from "cannon";
 import make_cube from "./cube.js";
 import show_crosshair from "./crosshair.js";
+import Player from './player.js';
 
 
 let timeStep=1/60;
@@ -16,9 +17,14 @@ let jumpStartTime = 0;
 const jumpDuration = 600; // in milliseconds
 const jumpHeight = 3;
 // Projectiles
-let proj_speed = 100;
+let proj_speed = 200;
 let proj_time = 5;
 const moveInterval = 150; // Interval in milliseconds
+// PLAYER
+let steve = new Player(60, 30);
+let reloadTime = 800;
+
+
 
 window.speed = (n=0.25) => {
   if(typeof n == "number") {
@@ -33,6 +39,23 @@ window.sens = (n=0.0002) => {
     return (`sensitivity updated to: ${n}`);
   } else { return ("invalid sensitivity value") }
 }
+
+window.position = (x, y, z) => {
+  if(typeof x == "number" && typeof y == "number" && typeof z == "number") {
+    camera.position.set(x, y, z)
+  }
+}
+
+let updateAmmo = (player) => {
+  let mag = document.getElementById("mag");
+  let reserve = document.getElementById("reserve");
+
+
+  mag.textContent = player.inMagazine;
+  reserve.textContent = player.inReserve;
+}
+
+
 
 
 // Scene
@@ -50,22 +73,39 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.domElement.id = "canvas"
 
+// CANNON SETUP
+let world = new CANNON.World();
+world.gravity.set(0,-10,0);
+world.broadphase = new CANNON.NaiveBroadphase();
+world.solver.iterations = 10;
 
-// Cube
-const geometry = new THREE.BoxGeometry(1000, 0.1, 1000);
-const material = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
-const cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
+
+// FLOOR
+const floorGeometry = new THREE.PlaneGeometry(1000, 1000); // Adjust the size as needed
+const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, wireframe: false }); //
+const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
+floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
+floorMesh.position.y = 0;
+scene.add(floorMesh);
+const floorShape = new CANNON.Plane(); // Create a plane shape for the floor
+const floorBody = new CANNON.Body({ mass: 100, shape: floorShape }); // Make the floor immovable (mass = 0)
+floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
+// floorBody.addEventListener('collide', (e) => {console.log(e); console.log("FLOOR HIT")})
+world.addBody(floorBody);
+
+updateAmmo(steve);
+
+
 
 let zero = make_cube(1,50, 1, 0x53D996);
 zero.position.set(0,0,0)
 scene.add(zero)
 
-let x = make_cube(500, 0.2, 1, 0x000000);
+let x = make_cube(500, 0.2, 1, 0x910000);
 x.position.set(0,0,0);
 scene.add(x)
 
-let y = make_cube(1, 0.2, 500, 0x000000);
+let y = make_cube(1, 0.2, 500, 0x910000);
 y.position.set(0,0,0);
 scene.add(y)
 
@@ -79,27 +119,23 @@ let get_random = (n) => {
 
 
 //______________________________________
-// CANNON SETUP
-let world = new CANNON.World();
-world.gravity.set(0,0,0);
-world.broadphase = new CANNON.NaiveBroadphase();
-world.solver.iterations = 10;
+// CHASE CUBES
 
 let make_body = () => {
   let shape = new CANNON.Box(new CANNON.Vec3(2, 2, 2));
-  let mass = 1;
-  let body = new CANNON.Body({ mass: 1 });
+  let mass = 10;
+  let body = new CANNON.Body({ mass });
   body.addShape(shape);
-  body.angularVelocity.set(10, 5, 30);
+  body.angularVelocity.set(1, 0, 1);
   body.angularDamping = 0.01;
-  body.position.set(get_random(100), 1.1, get_random(100));
+  body.position.set(get_random(100), 1, get_random(100));
   return body;
 }
 
 let cubes = [];
 let bodies = [];
 let bodiesToRemove = [];
-let shapesToRemove = [];
+let meshToRemove = [];
 
 for(let i = 0; i < 20; i++) {
   let b = make_body();
@@ -110,12 +146,24 @@ for(let i = 0; i < 20; i++) {
   // console.log(b)
   b.add
   b.addEventListener('collide', (e) => {
-    console.log(e)
-    bodiesToRemove.push(e.target)
-    shapesToRemove.push(e.target.shape)
+    // console.log(e)
+    if(e.body.userData.collisionClass != "userProjectile") {
+
+    } else {
+      bodiesToRemove.push(e.target)
+      scene.remove(e.target.userData.physicsMesh)
+      // meshToRemove.push(e.target.userData.mesh)
+    }
+
   })
+  // add mesh and body to the scene and world
   scene.add(c);
-  world.addBody(b)
+  world.addBody(b);
+  // add mesh and body to each other for ref
+  c.userData.physicsBody  = b;
+  b.userData = {physicsMesh: c, collisionClass: "chaseBox"}
+  // console.log(b)
+  // add mesh and body to the array for objects for each
   cubes.push(c);
   bodies.push(b);
   
@@ -220,7 +268,7 @@ document.addEventListener('keyup', (event) => {
     keyboardState[event.key] = false;
 });
 
-const move_player = () => {
+const playerInputs = () => {
 
     // Calculate the direction vector based on the camera's rotation
     const direction = new THREE.Vector3(0, 0, -1);
@@ -248,8 +296,23 @@ const move_player = () => {
         rightDirection.applyQuaternion(camera.quaternion);
         camera.position.addScaledVector(rightDirection, speed);
     }
+    if (keyboardState['r']) {
+      reload(steve);
+    }
     if(camera.position.y < floor) { camera.position.y = floor }
     
+}
+
+let isReloading = false;
+
+let reload = (player) => {
+  // console.log("RELOADING")
+  if(!isReloading) {
+    isReloading = true;
+    setTimeout(() => {player.reload(); isReloading=false; updateAmmo(steve)}, reloadTime);
+  } else {
+    // console.log("ALREADY RELOADING")
+  }
 }
 
 
@@ -332,44 +395,51 @@ canvas.onclick = (e) => {
 
 let projectiles = [];
 
-function createProjectile(position, camera, removeAfterSeconds) {
-  const geometry = new THREE.SphereGeometry(0.1, 32, 32);
-  const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-  const projectileMesh = new THREE.Mesh(geometry, material);
-  scene.add(projectileMesh);
+function createProjectile(position, camera, removeAfterSeconds, player) {
+  if(player.inMagazine > 0 && !isReloading) {
+    player.removeAmmo()
+    updateAmmo(player)
+    const geometry = new THREE.SphereGeometry(0.1, 32, 32);
+    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const projectileMesh = new THREE.Mesh(geometry, material);
+    scene.add(projectileMesh);
 
-  const mass = 2; // Mass of the projectile
-  const projectileShape = new CANNON.Sphere(0.1); // Radius of the sphere
-  const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
-  world.addBody(projectileBody);
+    const mass = 0.1; // Mass of the projectile
+    const projectileShape = new CANNON.Sphere(0.1); // Radius of the sphere
+    const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
+    projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile"}
+    world.addBody(projectileBody);
 
-  // Set initial position of the projectile
-  projectileMesh.position.copy(position);
-  projectileBody.position.copy(projectileMesh.position);
+    // Set initial position of the projectile
+    projectileMesh.position.copy(position);
+    projectileBody.position.copy(projectileMesh.position);
 
-  // Calculate initial velocity towards camera direction
-  const cameraDirection = new THREE.Vector3();
-  camera.getWorldDirection(cameraDirection);
-  const initialVelocity = new CANNON.Vec3(cameraDirection.x * proj_speed, cameraDirection.y * proj_speed, cameraDirection.z * proj_speed); // Adjust the velocity as needed
-  projectileBody.velocity.copy(initialVelocity);
+    // Calculate initial velocity towards camera direction
+    const cameraDirection = new THREE.Vector3();
+    camera.getWorldDirection(cameraDirection);
+    const initialVelocity = new CANNON.Vec3(cameraDirection.x * proj_speed, cameraDirection.y * proj_speed, cameraDirection.z * proj_speed); // Adjust the velocity as needed
+    projectileBody.velocity.copy(initialVelocity);
 
-  // Remove the projectile after a certain number of seconds
-  let elapsedTime = 0;
-  const removeInterval = setInterval(() => {
-      elapsedTime += 1 / 60; // Assuming a 60Hz frame rate
-      if (elapsedTime >= removeAfterSeconds) {
-          // Remove the projectile from the scene and world
-          scene.remove(projectileMesh);
-          world.remove(projectileBody);
-          clearInterval(removeInterval); // Stop the interval
-      }
-  }, 1000 / 60); // Run every frame
+    // Remove the projectile after a certain number of seconds
+    let elapsedTime = 0;
+    const removeInterval = setInterval(() => {
+        elapsedTime += 1 / 60; // Assuming a 60Hz frame rate
+        if (elapsedTime >= removeAfterSeconds) {
+            // Remove the projectile from the scene and world
+            scene.remove(projectileMesh);
+            world.remove(projectileBody);
+            clearInterval(removeInterval); // Stop the interval
+        }
+    }, 1000 / 60); // Run every frame
 
-  projectiles.push({
-    mesh: projectileMesh,
-    body: projectileBody,
-    removeAfterSeconds: removeAfterSeconds
-  });
+    projectiles.push({
+      mesh: projectileMesh,
+      body: projectileBody,
+      removeAfterSeconds: removeAfterSeconds
+    });
+  } else {
+  
+  }
 
 }
 
@@ -393,7 +463,7 @@ let update_projectiles = () => {
 
 
 
-document.addEventListener('click', () => {createProjectile(camera.position, camera, proj_time)});
+document.addEventListener('click', () => {createProjectile(camera.position, camera, proj_time, steve)});
 
 
 let isMouseHeldDown = false;
@@ -403,7 +473,7 @@ let moveTimer;
 function startContinuousMove() {
   moveTimer = setInterval(() => {
     if (isMouseHeldDown) {
-      createProjectile(camera.position, camera, proj_time)
+      createProjectile(camera.position, camera, proj_time, steve)
     }
   }, moveInterval);
 }
@@ -433,9 +503,9 @@ let removeBodies = (body, i) => {
 
 }
 
-let removeShapes = (shape, i) => {
-  if(shape) {
-    scene.remove(shape);
+let removeMesh = (mesh, i) => {
+  if(mesh) {
+    scene.remove(mesh);
     shapesToRemove.splice(i, 1);
   }
 }
@@ -450,9 +520,9 @@ const animate = () => {
   world.step(1/60);
   update_projectiles()
   updatePhysics();
-  move_player();
+  playerInputs();
   bodiesToRemove.forEach(removeBodies);
-  shapesToRemove.forEach(removeShapes);
+  meshToRemove.forEach(removeMesh);
     
     // handleJumpAnimation();
     
