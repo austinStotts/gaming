@@ -12,5 +12,14 @@ export default {
           entryFileNames: '[name].js',
         },
       },
+        // Disable the crossorigin attribute in the production build
+        // by customizing the HTML minification options
+        // This option applies to Vite 2.x, and might change in future versions
+        terserOptions: {
+            format: {
+            // Disable the crossorigin attribute addition
+            crossorigin: false,
+            },
+        },
     },
   };
