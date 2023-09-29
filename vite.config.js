@@ -1,5 +1,17 @@
-export default {
-    build: {
+const noAttr = () => {
+  return {
+    name: "no-attribute",
+    transformIndexHtml(html) {
+      return html.replace(`crossorigin`, "");
+    }
+  }
+}
+
+
+
+
+export default {  
+  build: {
       // Output directory for production build
       outDir: 'dist',
   
@@ -10,6 +22,13 @@ export default {
       rollupOptions: {
         output: {
           entryFileNames: '[name].js',
+          assetFileNames: (assetInfo) => {
+            let extType = assetInfo.name.split('.').at(1);
+            if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+              extType = 'img';
+            }
+            return `[name]-[hash][extname]`;
+          },
         },
       },
         // Disable the crossorigin attribute in the production build
@@ -21,5 +40,7 @@ export default {
                 crossorigin: false,
             },
         },
+        
     },
+    plugins: [noAttr()]
   };
