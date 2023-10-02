@@ -1,11 +1,13 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
-import make_cube from "./cube.js";
+import makeMesh from "./helpers/makeMesh.js";
+import makeBody from "./helpers/makeBody.js";
 import show_crosshair from "./crosshair.js";
 import Player from './player.js';
+import Pawn from './enemies/pawn.js';
+import Pea_Shooter from './weapons/pea_shooter.js';
 
 
-let timeStep=1/60;
 // camera / movement
 let sensitivity = 0.0002; // CEMERA SENS ** ** **
 let speed = 0.25; // PLAYER MOVE SPEED ** ** **
@@ -22,7 +24,12 @@ let proj_time = 5;
 const moveInterval = 150; // Interval in milliseconds
 // PLAYER
 let steve = new Player(60, 30);
-let reloadTime = 800;
+// ENEMIES
+let bodiesToRemove = [];
+let meshToRemove = [];
+let enemies = {}
+let wave = 1;
+let waves = [];
 
 
 
@@ -46,16 +53,31 @@ window.position = (x, y, z) => {
   }
 }
 
+
 let updateAmmo = (player) => {
   let mag = document.getElementById("mag");
   let reserve = document.getElementById("reserve");
 
 
-  mag.textContent = player.inMagazine;
-  reserve.textContent = player.inReserve;
+  mag.textContent = player.weapon.inMagazine;
+  reserve.textContent = player.weapon.inReserve;
 }
 
+let updateHP = (player) => {
+  let hp = document.getElementById("hp");
+  hp.value = player.hp;
+}
 
+let init = () => {
+  scene.add(floorMesh);
+  world.addBody(floorBody);
+  scene.add(zero)
+  scene.add(x)
+  scene.add(y)
+  updateAmmo(steve);
+  updateHP(steve)
+  spawn();
+}
 
 
 // Scene
@@ -65,7 +87,6 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(0,5,2);
 camera.lookAt(0,5,0);
-
 
 // Renderer
 const renderer = new THREE.WebGLRenderer();
@@ -79,35 +100,29 @@ world.gravity.set(0,-10,0);
 world.broadphase = new CANNON.NaiveBroadphase();
 world.solver.iterations = 10;
 
-
 // FLOOR
 const floorGeometry = new THREE.PlaneGeometry(1000, 1000); // Adjust the size as needed
 const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, side: THREE.DoubleSide, wireframe: false }); //
 const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
 floorMesh.position.y = 0;
-scene.add(floorMesh);
 const floorShape = new CANNON.Plane(); // Create a plane shape for the floor
 const floorBody = new CANNON.Body({ mass: 100, shape: floorShape }); // Make the floor immovable (mass = 0)
 floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
 // floorBody.addEventListener('collide', (e) => {console.log(e); console.log("FLOOR HIT")})
-world.addBody(floorBody);
-
-updateAmmo(steve);
 
 
 
-let zero = make_cube(1,50, 1, 0x53D996);
+
+let zero = makeMesh(1,50, 1, 0x53D996);
 zero.position.set(0,0,0)
-scene.add(zero)
 
-let x = make_cube(500, 0.2, 1, 0x910000);
+let x = makeMesh(500, 0.2, 1, 0x910000);
 x.position.set(0,0,0);
-scene.add(x)
 
-let y = make_cube(1, 0.2, 500, 0x910000);
+let y = makeMesh(1, 0.2, 500, 0x910000);
 y.position.set(0,0,0);
-scene.add(y)
+
 
 let get_random = (n) => {
   if((Math.floor(Math.random() * 100)) % 2 == 0) {
@@ -121,61 +136,50 @@ let get_random = (n) => {
 //______________________________________
 // CHASE CUBES
 
-let make_body = () => {
-  let shape = new CANNON.Box(new CANNON.Vec3(2, 2, 2));
-  let mass = 10;
-  let body = new CANNON.Body({ mass });
-  body.addShape(shape);
-  body.angularVelocity.set(1, 0, 1);
-  body.angularDamping = 0.01;
-  body.position.set(get_random(100), 1, get_random(100));
-  return body;
-}
-
-let cubes = [];
-let bodies = [];
-let bodiesToRemove = [];
-let meshToRemove = [];
-
-for(let i = 0; i < 20; i++) {
-  let b = make_body();
-  let c = make_cube(2, 2, 2, 0x674EA7, false);
-  // c.position.set(Math.random() * 100, 1, Math.random() * 100);
-  // c.position.copy(b.position)
-  // c.quaternion.copy(b.quaternion)
-  // console.log(b)
-  b.add
-  b.addEventListener('collide', (e) => {
-    // console.log(e)
-    if(e.body.userData.collisionClass != "userProjectile") {
-
-    } else {
-      bodiesToRemove.push(e.target)
-      scene.remove(e.target.userData.physicsMesh)
-      // meshToRemove.push(e.target.userData.mesh)
+let enemyCollision = (event) => {
+  if(event.body.userData.collisionClass == "userProjectile") {
+    let id = event.target.userData.id;
+    if(enemies[id]) {
+      if(enemies[id].update_hp(steve.weapon.projectileDMG)) {
+        removeEnemy(event.target.userData.id);
+      }
     }
+    
+  } else {
+    // bodiesToRemove.push(event.target)
+    // scene.remove(event.target.userData.physicsMesh)
+    
 
-  })
-  // add mesh and body to the scene and world
-  scene.add(c);
-  world.addBody(b);
-  // add mesh and body to each other for ref
-  c.userData.physicsBody  = b;
-  b.userData = {physicsMesh: c, collisionClass: "chaseBox"}
-  // console.log(b)
-  // add mesh and body to the array for objects for each
-  cubes.push(c);
-  bodies.push(b);
-  
+  }
+}
+
+let spawn = () => {
+  let x = wave + 1;
+  for(let i = 0; i < x; i++) {
+    let b = makeBody(2,2,2, 10, 100);
+    let c = makeMesh(2, 2, 2, 0x674EA7, false);
+    b.addEventListener('collide', enemyCollision)
+    
+    c.userData.physicsBody = b;
+    b.userData = {physicsMesh: c, collisionClass: "chaseBox", id: `${wave}_${i}`}
+    scene.add(c);
+    world.addBody(b);
+    enemies[`${wave}_${i}`] = new Pawn(b, c); 
+  }
 }
 
 
 
-// let c = make_cube(2, 2, 2, 0x674EA7, true);
-// let body = make_body();
-// // c.position.set(10, 2, 10);
-// scene.add(c)
-// world.addBody(body)
+
+
+
+
+let removeEnemy = (id) => {
+  bodiesToRemove.push(enemies[id].body);
+  scene.remove(enemies[id].mesh);
+  delete enemies[id];
+}
+
 
 let move_towards_player = (mesh, body) => {
   let direction = new THREE.Vector3();
@@ -190,17 +194,13 @@ let move_towards_player = (mesh, body) => {
 }
 
 let updatePhysics = () => {
-  // console.log(bodies)
-  
-  for(let i=0; i < cubes.length; i++) {
-    move_towards_player(cubes[i], bodies[i])
-    cubes[i].position.copy(bodies[i].position)
-    cubes[i].quaternion.copy(bodies[i].quaternion);
-    // console.log(bodies[i])
-  }
 
-  // c.position.copy(body.position);
-  // c.quaternion.copy(body.quaternion);
+  Object.keys(enemies).forEach((key) => {
+    move_towards_player(enemies[key].mesh, enemies[key].body)
+    enemies[key].mesh.position.copy(enemies[key].body.position);
+    enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
+  })
+
 }
 
 
@@ -309,7 +309,7 @@ let reload = (player) => {
   // console.log("RELOADING")
   if(!isReloading) {
     isReloading = true;
-    setTimeout(() => {player.reload(); isReloading=false; updateAmmo(steve)}, reloadTime);
+    setTimeout(() => {player.weapon.reload(); isReloading=false; updateAmmo(steve)}, player.weapon.reloadTime);
   } else {
     // console.log("ALREADY RELOADING")
   }
@@ -393,54 +393,41 @@ canvas.onclick = (e) => {
 // _________________________
 // projectile
 
+let removeProjectile = (mesh, body, time) => {
+  let elapsedTime = 0;
+  const removeInterval = setInterval(() => {
+      elapsedTime += 1 / 60; // Assuming a 60Hz frame rate
+      if (elapsedTime >= time) {
+          // Remove the projectile from the scene and world
+          scene.remove(mesh);
+          world.remove(body);
+          clearInterval(removeInterval); // Stop the interval
+      }
+  }, 1000 / 60); // Run every frame
+}
+
 let projectiles = [];
 
-function createProjectile(position, camera, removeAfterSeconds, player) {
-  if(player.inMagazine > 0 && !isReloading) {
-    player.removeAmmo()
+function createProjectile(player) {
+  if(player.weapon.inMagazine > 0 && !isReloading) {
+    player.weapon.removeAmmo()
     updateAmmo(player)
-    const geometry = new THREE.SphereGeometry(0.1, 32, 32);
-    const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const projectileMesh = new THREE.Mesh(geometry, material);
-    scene.add(projectileMesh);
 
-    const mass = 0.1; // Mass of the projectile
-    const projectileShape = new CANNON.Sphere(0.1); // Radius of the sphere
-    const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
-    projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile"}
-    world.addBody(projectileBody);
-
-    // Set initial position of the projectile
-    projectileMesh.position.copy(position);
-    projectileBody.position.copy(projectileMesh.position);
-
-    // Calculate initial velocity towards camera direction
-    const cameraDirection = new THREE.Vector3();
-    camera.getWorldDirection(cameraDirection);
-    const initialVelocity = new CANNON.Vec3(cameraDirection.x * proj_speed, cameraDirection.y * proj_speed, cameraDirection.z * proj_speed); // Adjust the velocity as needed
-    projectileBody.velocity.copy(initialVelocity);
-
-    // Remove the projectile after a certain number of seconds
-    let elapsedTime = 0;
-    const removeInterval = setInterval(() => {
-        elapsedTime += 1 / 60; // Assuming a 60Hz frame rate
-        if (elapsedTime >= removeAfterSeconds) {
-            // Remove the projectile from the scene and world
-            scene.remove(projectileMesh);
-            world.remove(projectileBody);
-            clearInterval(removeInterval); // Stop the interval
-        }
-    }, 1000 / 60); // Run every frame
-
-    projectiles.push({
-      mesh: projectileMesh,
-      body: projectileBody,
-      removeAfterSeconds: removeAfterSeconds
-    });
-  } else {
+    let p = player.weapon.createProjectile(camera);
+    // console.log(p)
+    for(let i = 0; i < p.body.length; i++) {
+      // console.log(p.mesh[i])
+      scene.add(p.mesh[i]);
+      world.addBody(p.body[i]);
   
-  }
+      projectiles.push({
+        mesh: p.mesh[i],
+        body: p.body[i],
+        removeAfterSeconds: p.body[i].userData.removeafterMS
+      });
+    }
 
+  }
 }
 
 let update_projectiles = () => {
@@ -451,19 +438,21 @@ let update_projectiles = () => {
     projectile.mesh.position.copy(projectile.body.position);
 
     // Check if it's time to remove the projectile
-    projectile.removeAfterSeconds -= 1 / 60;
-    if (projectile.removeAfterSeconds <= 0) {
-        // Remove the projectile from the scene and world
-        scene.remove(projectile.mesh);
-        world.remove(projectile.body);
-        projectiles.splice(i, 1); // Remove from the array
-    }
+  //   projectile.removeAfterSeconds -= 1 / 60;
+  //   if (projectile.removeAfterSeconds <= 0) {
+  //       // Remove the projectile from the scene and world
+  //       scene.remove(projectile.mesh);
+  //       world.remove(projectile.body);
+  //       projectiles.splice(i, 1); // Remove from the array
+  //   }
+  // }
+    removeProjectile(projectile.mesh, projectile.body, projectile.removeAfterSeconds)
   }
 }
 
 
 
-document.addEventListener('click', () => {createProjectile(camera.position, camera, proj_time, steve)});
+document.addEventListener('click', () => {createProjectile(steve)});
 
 
 let isMouseHeldDown = false;
@@ -473,7 +462,7 @@ let moveTimer;
 function startContinuousMove() {
   moveTimer = setInterval(() => {
     if (isMouseHeldDown) {
-      createProjectile(camera.position, camera, proj_time, steve)
+      createProjectile(steve)
     }
   }, moveInterval);
 }
@@ -496,6 +485,7 @@ document.addEventListener('mouseup', () => {
 });
 
 let removeBodies = (body, i) => {
+  console.log(enemies)
   if(body) { 
     world.remove(body)
     bodiesToRemove.splice(i, 1);
@@ -510,6 +500,12 @@ let removeMesh = (mesh, i) => {
   }
 }
 
+let updateGame = () => {
+  if(Object.keys(enemies).length <= 0) {
+    wave += 1;
+    spawn();
+  }
+}
 
 
 // _________________________________________
@@ -518,22 +514,18 @@ let removeMesh = (mesh, i) => {
 const animate = () => {
 
   world.step(1/60);
+
   update_projectiles()
   updatePhysics();
   playerInputs();
+  updateGame();
+
   bodiesToRemove.forEach(removeBodies);
   meshToRemove.forEach(removeMesh);
     
-    // handleJumpAnimation();
-    
-    // console.log(isLookingAt(camera, zero, scene))
-    // if(isLookingAt(camera, zero, scene)) { zero.material.color.set(0x000000) }
-    // else { zero.material.color.set(0x6600ff) }
-
-    // updateCrosshairPosition();
-
-    requestAnimationFrame(animate);
-    renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+  renderer.render(scene, camera);
 };
 
+init();
 animate();

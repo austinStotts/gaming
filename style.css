@@ -13,16 +13,50 @@
     border-radius: 2px;
 }
 
-.ammo-wrapper {
+.hp-wrapper {
     position: fixed;
     bottom: 50px;
-    right: 200px;
+    right: 150px;
+    z-index: 100;
+    filter: invert(1);
+    mix-blend-mode: difference;
+}
+
+.hp-label {
+    font-family: monospace;
+    font-size: 18px;
+}
+
+.hp-bar {
+    color: red;
+    height: 17px;
+    border: 1px solid black;
+    box-shadow: 1px 1px 4px rgba( 0, 0, 0, 0.2 );
+    border-radius: 2px;
+
+}
+
+.hp-bar::-moz-progress-bar {
+    background-color: red;
+    border-radius: 7px;
+    
+}
+
+.hp-bar::-webkit-progress-value {
+    background-color: red;
+}
+
+
+.ammo-wrapper {
+    position: fixed;
+    bottom: 75px;
+    right: 150px;
     z-index: 100;
     border: 1px solid red;
     filter: invert(1);
     mix-blend-mode: difference;
     border-radius: 2px;
-    /* width: 75px; */
+    width: 85px;
     padding: 2px 8px;
     font-size: 30px;
     font-family: monospace;
