@@ -26,8 +26,8 @@ export default class Pea_Shooter {
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         const projectileMesh = new THREE.Mesh(geometry, material);
     
-        const mass = 0.1; // Mass of the projectile
-        const projectileShape = new CANNON.Sphere(0.1); // Radius of the sphere
+        const mass = 5; // Mass of the projectile
+        const projectileShape = new CANNON.Sphere(0.2); // Radius of the sphere
         const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
         projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeafterMS: this.removeAfterMS}
         projectileMesh.position.copy(camera.position);

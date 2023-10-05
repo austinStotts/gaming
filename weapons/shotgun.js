@@ -22,7 +22,6 @@ export default class Shotgun {
     }
 
     reload () {
-        // console.log("RRR RELOADING!!!")
         if(this.inReserve >= this.magazineSize - this.inMagazine) { this.inReserve += this.inMagazine; this.inMagazine = this.magazineSize; this.inReserve -= this.magazineSize; }
         else { this.inReserve += this.inMagazine; this.inMagazine = this.inReserve; this.inReserve = 0; }
     }
@@ -34,15 +33,14 @@ export default class Shotgun {
     createProjectile (camera) {
         let bodies = [];
         let meshes = [];
-        console.log("SHOTGUN SHOOT")
 
         for (let i=0; i<8; i++) {
-            const geometry = new THREE.SphereGeometry(0.05, 32, 32);
+            const geometry = new THREE.SphereGeometry(0.025, 32, 32);
             const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
             const projectileMesh = new THREE.Mesh(geometry, material);
         
-            const mass = 20; // Mass of the projectile
-            const projectileShape = new CANNON.Sphere(0.05); // Radius of the sphere
+            const mass = 15; // Mass of the projectile
+            const projectileShape = new CANNON.Sphere(0.25); // Radius of the sphere
             const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
             projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeafterMS: this.removeAfterMS}
             projectileMesh.position.copy(camera.position);

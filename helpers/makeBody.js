@@ -9,12 +9,10 @@ let get_random = (n) => {
     }
   }
 
-export default (width, height, depth, mass, area) => {
-    let shape = new CANNON.Box(new CANNON.Vec3(width, height, depth));
-    let body = new CANNON.Body({ mass });
+export default (width, height, depth, mass, area=false) => {
+    let shape = new CANNON.Box(new CANNON.Vec3(width/2, height/2, depth/2));
+    let body = new CANNON.Body({ mass, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01 });
     body.addShape(shape);
-    body.angularVelocity.set(1, 0, 1);
-    body.angularDamping = 0.01;
-    body.position.set(get_random(area), 1, get_random(area));
+    if(area) { body.position.set(get_random(area), 1, get_random(area)) }
     return body;
 }
