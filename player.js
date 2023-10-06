@@ -9,7 +9,7 @@ export default class Player {
         this.id = id;
         this.hp = 100;
         this.armor = 0;
-        this.speed = 10;
+        this.speed = 40;
         this.acc = 0.25;
         this.dec = 0.2;
         this.groundHeight = 0.25;
@@ -29,25 +29,13 @@ export default class Player {
         this.body = body;
     }
 
-    // move_player (camera, d, s) {
-    //     let x = new THREE.Vector3();
-    //     x.copy(this.body.position);
-    //     x.addScaledVector(d, s)
-    //     console.log("\nPLAYER DIRECTION: ", x)
-    //     this.body.position.copy(x)
-    //     camera.position.copy(this.body.position);
-    // }
 
 
 
     move_player (velocity) {
-        // if(Math.abs(this.body.velocity.x) >= this.speed) { velocity.x = 0; }
-        // if(Math.abs(this.body.velocity.z) >= this.speed) { velocity.z = 0; }
-
-        velocity.mult(this.speed, this.body.velocity)
-
-        // this.body.velocity.set(velocity.x + this.body.velocity.x, this.body.velocity.y, velocity.z + this.body.velocity.z)
-        
+        let captureY = this.body.velocity.y;
+        velocity.mult(this.speed, this.body.velocity);
+        this.body.velocity.y = captureY;
     }
 
     take_damage (n) {

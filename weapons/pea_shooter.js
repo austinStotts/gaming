@@ -8,7 +8,7 @@ export default class Pea_Shooter {
         this.inMagazine = magazineSize;
         this.inReserve = ammo - magazineSize;
         this.reloadTime = 800; // in milliseconds
-        this.removeAfterMS = 5; // in milliseconds
+        this.removeAfterMS = 5000; // in milliseconds
         this.projectile_speed = 200; // in milliseconds
     }
 
@@ -26,10 +26,12 @@ export default class Pea_Shooter {
         const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
         const projectileMesh = new THREE.Mesh(geometry, material);
     
-        const mass = 5; // Mass of the projectile
-        const projectileShape = new CANNON.Sphere(0.2); // Radius of the sphere
+        const mass = 1; // Mass of the projectile
+        const projectileShape = new CANNON.Sphere(0.5); // Radius of the sphere
         const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
-        projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeafterMS: this.removeAfterMS}
+        projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeAfterMS: this.removeAfterMS}
+        projectileBody.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
+        projectileBody.ccdIterations = 100;
         projectileMesh.position.copy(camera.position);
         projectileBody.position.copy(projectileMesh.position);
         const cameraDirection = new THREE.Vector3();
