@@ -83,21 +83,22 @@ let init = () => {
 }
 
 
+
 // Scene
 const scene = new THREE.Scene();
+
 
 // CAMERA ** ** **
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(2,5,0);
 camera.lookAt(0,5,0);
 
+
 // Renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.domElement.id = "canvas"
-
-
 
 
 // CANNON SETUP
@@ -126,53 +127,36 @@ world.addBody(rampBody)
 
 
 // FLOOR
-const floorGeometry = new THREE.PlaneGeometry(25,25); // Adjust the size as needed
-const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true }); //
+const floorGeometry = new THREE.PlaneGeometry(1000,1000);
+const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true });
 const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
 floorMesh.position.set(0,0,0);
-const floorShape = new CANNON.Plane(); // Create a plane shape for the floor
-// let floorShape = new CANNON.Box(new CANNON.Vec3(500, 0.1, 500));
-let floorBody = new CANNON.Body({ mass: 0, shape: floorShape }); // Make the floor immovable (mass = 0)
+const floorShape = new CANNON.Plane();
+let floorBody = new CANNON.Body({ mass: 0, shape: floorShape });
 floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
-console.log(floorBody)
-// floorBody.collisionResponse = false;
+console.log(floorBody);
 floorBody.collisionFilterGroup = 1;
 floorBody.collisionFilterMask = -1;
-// floorBody.addEventListener('collide', (e) => {console.log(e); console.log("FLOOR HIT")})
+
 
 // CREATE PLAYER BODY
 let create_player_body = (player) => {
-  
-  
   let shape = new CANNON.Box(new CANNON.Vec3(1,2,1));
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
-  // playerBody.collisionResponse = false;
-  // playerBody.fixedRotation = true;
   playerBody.position.set(2,2,0);
-  // playerBody.linearDamping = 0.01;
-  // playerBody.angularDamping = 0.8;
-  // playerBody.fixedRotation = true;
-  
-
   playerBody.collisionFilterGroup = 2;
   playerBody.collisionFilterMask = -1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
   playerBody.addEventListener("collide", playerCollision)
-  // playerBody.addEventListener("collide", (event) => { 
-  //   console.log("PLAYER COLLISION");
-  //   console.log(event.target.userData.collisionClass);
-  //   console.log(event.body.userData.collisionClass); 
-  // })
   player.set_body(playerBody)
   world.addBody(playerBody);
 }
 
 let playerCollision = (event) => {
-  // PLAYER.groundheight = event.body.position.y + 0.25;
+  
 }
-
 
 // let zero = makeMesh(1,50, 1, 0x53D996);
 // zero.position.set(0,0,0)
@@ -192,12 +176,6 @@ let get_random = (n) => {
   }
 }
 
-
-// let rampGeometry = new THREE.BoxGeometry(10,0.2,10);
-// let rampMaterial = new THREE.MeshBasicMaterial({ color: 0x5FBBFF })
-// let rampMesh = new THREE.Mesh(rampGeometry, rampMaterial);
-// let ramp = new CANNON.Box(new CANNON.Vec3(10,0.2,10))
-
 //______________________________________
 // CHASE CUBES
 
@@ -209,15 +187,7 @@ let enemyCollision = (event) => {
         removeEnemy(event.target.userData.id);
       }
     }
-    
-  // } else if(event.body.userData.collisionClass == "player") {
-  } else if(event.body.userData.collisionClass == "player" || event.target.userData.collisionClass == "player") {
-    // console.log("\n---------------------------------\nPLAYER HIT BOX")
-    // console.log("COLLISION BODY: ", event.body.userData.collisionClass);
-    // console.log("COLLISION TARGET: ", event.target.userData.collisionClass);
-    // console.log("---------------------------------\n")
-
-  }
+  } else if(event.body.userData.collisionClass == "player" || event.target.userData.collisionClass == "player") {}
 }
 
 const light = new THREE.AmbientLight( 0x404040 ); // soft white light
@@ -233,6 +203,12 @@ for (const body of cannonBodies) {
 
 
 
+
+
+
+
+// __ __ __ __ __ __ __ __ __ __ __
+// ENEMIES
 
 let spawn = () => {
   let x = wave + 1;
@@ -253,18 +229,11 @@ let spawn = () => {
   }
 }
 
-
-
-
-
-
-
 let removeEnemy = (id) => {
   bodiesToRemove.push(enemies[id].body);
   scene.remove(enemies[id].mesh);
   delete enemies[id];
 }
-
 
 let move_towards_player = (mesh, body) => {
   let direction = new THREE.Vector3();
@@ -285,93 +254,20 @@ let move_towards_player = (mesh, body) => {
 
 
 // _________________________________________
-// check if looking
-const isLookingAt = (camera, objectToCheck, scene) => { // return true or false if camera is looking at object
-    // Create a raycaster
-    const raycaster = new THREE.Raycaster();
-
-    // Get the camera's position and direction
-    const cameraPosition = camera.position.clone();
-    const cameraDirection = new THREE.Vector3(0, 0, -1);
-    cameraDirection.applyQuaternion(camera.quaternion);
-
-    // Set the ray's origin and direction
-    raycaster.set(cameraPosition, cameraDirection);
-
-    // Find intersections between the ray and objects in the scene
-    const intersects = raycaster.intersectObject(objectToCheck, true);
-
-    // If there are intersections, the camera is looking at the object
-    return intersects.length > 0;
-    
-}
-
-
-
-
-
-// _________________________________________
 // Keyboard controls
 const keyboardState = {};
 document.addEventListener('keydown', (event) => {
-    // console.log(event.key)
-    // jump(event)
     keyboardState[event.key] = true;
 });
 document.addEventListener('keyup', (event) => {
-
     keyboardState[event.key] = false;
 });
-
-
-const playerInputs_ = () => {
-
-    // Calculate the direction vector based on the camera's rotation
-    const direction = new THREE.Vector3(0, 0, -1);
-    direction.applyQuaternion(camera.quaternion);
-  
-    // console.log(camera.quaternion)
-    direction.setY(0);
-    direction.normalize()
-    
-    let velocity = new CANNON.Vec3();
-    if (keyboardState['ArrowUp'] || keyboardState['w']) {
-      velocity.copy(direction.clone().multiplyScalar(PLAYER.acc));
-      PLAYER.move_player(velocity);
-    }
-    if (keyboardState['ArrowDown'] || keyboardState['s']) {
-      velocity.copy(direction.clone().multiplyScalar(-PLAYER.acc));
-      PLAYER.move_player(velocity);
-    }
-    if (keyboardState['ArrowLeft'] || keyboardState['a']) {
-      const leftDirection = new THREE.Vector3(-1, 0, 0);
-      leftDirection.applyQuaternion(camera.quaternion);
-      leftDirection.setY(0);
-      velocity.copy(leftDirection.clone().multiplyScalar(PLAYER.acc));
-      PLAYER.move_player(velocity);
-    }
-    if (keyboardState['ArrowRight'] || keyboardState['d']) {
-      const rightDirection = new THREE.Vector3(1, 0, 0);
-      rightDirection.applyQuaternion(camera.quaternion);
-      rightDirection.setY(0);
-      velocity.copy(rightDirection.clone().multiplyScalar(PLAYER.acc));
-      PLAYER.move_player(velocity);
-    }
-    if (keyboardState['r']) {
-      reload(PLAYER);
-    }
-    // if(camera.position.y < floor) { camera.position.y = floor }
-    
-}
-
-
 
 
 
 // ______________________________________________________________________
 // $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 // NEW PLAYER INPUT FUNCTION
-
 
 let keys = {};
 
@@ -454,17 +350,12 @@ let playerInputs = () => {
 
 
 let isReloading = false;
-
 let reload = (player) => {
-  // console.log("RELOADING")
   if(!isReloading) {
     isReloading = true;
     setTimeout(() => {player.weapon.reload(); isReloading=false; updateAmmo(PLAYER)}, player.weapon.reloadTime);
-  } else {
-    // console.log("ALREADY RELOADING")
-  }
+  } else {}
 }
-
 
 
 
@@ -486,27 +377,18 @@ function jump() {
     jumpStartTime = Date.now();
     PLAYER.body.velocity.y = 10;
   
-    // const initialY = camera.position.y;
-    // const targetY = initialY + jumpHeight;
-  
     function animateJump() {
       const currentTime = Date.now();
       const elapsedTime = currentTime - jumpStartTime;
   
       if (elapsedTime >= jumpDuration) {
-        // Jump animation is complete
-        // camera.position.y = initialY;
         isJumping = false;
-        // console.log(camera.position.y)
         return;
       }
-  
       const t = elapsedTime / jumpDuration;
-      // camera.position.y = initialY + jumpHeight * Math.sin(t * Math.PI);
-      // console.log(camera.position.y)
       requestAnimationFrame(animateJump);
     }
-  
+
     animateJump();
 }
 
@@ -519,31 +401,28 @@ let mouseState = {
     y: 0,
     down: false
 };
-// camera.rotation.x.toFixed(90);
+
 document.addEventListener('mousemove', (event) => {
-    if (!keyboardState['Alt']) {
-        // const dy = event.clientY - mouseState.y;
-        
-        cameraRotation.x -= event.movementY * sensitivity;
-        cameraRotation.y -= event.movementX * sensitivity;
-        cameraRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotation.x));
-        
-        camera.rotation.copy(cameraRotation)
-        
-    }
-    mouseState.x = event.movementX;
-    mouseState.y = event.movementY;
+  if (!keyboardState['Alt']) {
+      
+    cameraRotation.x -= event.movementY * sensitivity;
+    cameraRotation.y -= event.movementX * sensitivity;
+    cameraRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotation.x));
+    camera.rotation.copy(cameraRotation)
+      
+  }
+  mouseState.x = event.movementX;
+  mouseState.y = event.movementY;
 });
-
-
 
 
 let canvas = document.querySelector("canvas");
 canvas.onclick = (e) => {
-    // preventDefault()
     canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
     canvas.requestPointerLock();
 }
+
+
 
 // _________________________
 // projectile
@@ -563,15 +442,10 @@ function createProjectile(player) {
   if(player.weapon.inMagazine > 0 && !isReloading) {
     player.weapon.removeAmmo()
     updateAmmo(player)
-
     let p = player.weapon.createProjectile(camera);
-    console.log(p)
-    // console.log(p)
     for(let i = 0; i < p.body.length; i++) {
-      // console.log(p.mesh[i])
       scene.add(p.mesh[i]);
       world.addBody(p.body[i]);
-
   
       projectiles.push({
         mesh: p.mesh[i],
@@ -587,14 +461,10 @@ function createProjectile(player) {
 let update_projectiles = () => {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const projectile = projectiles[i];
-
-    // Update the Three.js mesh position based on the Cannon.js body
     projectile.mesh.position.copy(projectile.body.position);
     if(removeProjectile(projectile)) { projectiles.splice(i, 1) } ;
   }
 }
-
-
 
 document.addEventListener('click', () => {createProjectile(PLAYER)});
 
@@ -628,13 +498,14 @@ document.addEventListener('mouseup', () => {
   stopContinuousMove();
 });
 
+
+
 let removeBodies = (body, i) => {
   console.log(enemies)
   if(body) { 
     world.remove(body)
     bodiesToRemove.splice(i, 1);
   }
-
 }
 
 let removeMesh = (mesh, i) => {
@@ -656,10 +527,6 @@ let updateEnemyPhysics = () => {
 }
 
 let updateGame = () => {
-  // if(Object.keys(enemies).length <= 0) {
-  //   wave += 1;
-  //   spawn();
-  // }
 
   rampMesh.position.copy(rampBody.position);
   rampMesh.quaternion.copy(rampBody.quaternion);
@@ -667,7 +534,7 @@ let updateGame = () => {
   PLAYER.body.position.y += 0.004;
   playerMesh.position.copy(PLAYER.body.position);
   playerMesh.quaternion.copy(PLAYER.body.quaternion);
-  // playerMesh.rotation.copy(PLAYER.body.rotation);
+
   camera.position.copy(PLAYER.body.position);
   camera.position.y += 2.5;
 }
@@ -688,17 +555,15 @@ setInterval(() => {
 let playerGeometry = new THREE.BoxGeometry(2,4,2);
 let playerMaterial = new THREE.MeshBasicMaterial({ color: 0xFE90C9, wireframe: true })
 let playerMesh = new THREE.Mesh(playerGeometry,playerMaterial);
-scene.add(playerMesh)
+scene.add(playerMesh);
+
+
 // _________________________________________
 // ||||||||||||||||||||||||||||||||||||||||
 // Animation loop
 const animate = () => {
 
   world.step(1/60);
-
-  
-
-
 
   update_projectiles();
   updateEnemyPhysics();
