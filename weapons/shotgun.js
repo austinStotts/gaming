@@ -18,7 +18,7 @@ export default class Shotgun {
         this.reloadTime = 1400; // in milliseconds
         this.spreadMultiplier = 0.05;
         this.removeAfterMS = 200; // in seconds
-        this.projectile_speed = 300; // in milliseconds
+        this.projectile_speed = 150; // in milliseconds
     }
 
     reload () {

@@ -9,7 +9,7 @@ export default class Pea_Shooter {
         this.inReserve = ammo - magazineSize;
         this.reloadTime = 800; // in milliseconds
         this.removeAfterMS = 5000; // in milliseconds
-        this.projectile_speed = 200; // in milliseconds
+        this.projectile_speed = 75; // in milliseconds
     }
 
     reload () {

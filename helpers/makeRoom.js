@@ -19,6 +19,8 @@ export default (width, height, depth, color) => {
   const floorBody = new CANNON.Body({ mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
   floorBody.addShape(floorShape);
   floorBody.position.copy(new CANNON.Vec3(0, 0, depth / 2));
+  floorBody.quaternion.setFromEuler(-Math.PI / 2, 0, 0);
+  floorBody.userData = { collisionClass: 'floor', mesh: floorMesh }
   cannonBodies.push(floorBody); // Add to the array
 
   // Create walls
@@ -34,6 +36,7 @@ export default (width, height, depth, color) => {
   leftWallBody.position.copy(new CANNON.Vec3(leftWallPosition.x, leftWallPosition.y, leftWallPosition.z));
   const leftWallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
   leftWallMesh.position.copy(leftWallPosition);
+  leftWallBody.userData = { collisionClass: 'wall', mesh: leftWallMesh }
   cannonBodies.push(leftWallBody); // Add to the array
 
   // Right wall
@@ -44,6 +47,7 @@ export default (width, height, depth, color) => {
   rightWallBody.position.copy(new CANNON.Vec3(rightWallPosition.x, rightWallPosition.y, rightWallPosition.z));
   const rightWallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
   rightWallMesh.position.copy(rightWallPosition);
+  rightWallBody.userData = { collisionClass: 'wall', mesh: rightWallMesh }
   cannonBodies.push(rightWallBody); // Add to the array
 
   // Back wall
@@ -55,6 +59,7 @@ export default (width, height, depth, color) => {
   const backWallGeometry = new THREE.BoxGeometry(width, height, wallThickness);
   const backWallMesh = new THREE.Mesh(backWallGeometry, wallMaterial);
   backWallMesh.position.copy(backWallPosition);
+  backWallBody.userData = { collisionClass: 'wall', mesh: backWallMesh }
   cannonBodies.push(backWallBody); // Add to the array
 
   // Front wall (optional)

@@ -176,8 +176,51 @@ let get_random = (n) => {
   }
 }
 
-//______________________________________
-// CHASE CUBES
+
+
+//
+// WORLD GEN
+//
+
+
+const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+light.position.set(0,30,0)
+scene.add( light );
+
+let build = (offset) => {
+  let { roomGroup, cannonBodies } = makeRoom(20, 12, 30, 0x595151);
+  scene.add(roomGroup);
+  for (const body of cannonBodies) {
+    let origin = new CANNON.Vec3().copy(body.position);
+    body.position = new CANNON.Vec3(origin.x + offset.x, origin.y + offset.y, origin.z + offset.z);
+    body.userData.mesh.position.copy(body.position)
+    world.addBody(body);
+  }
+}
+
+build({ x: 5, y: 6, z: 8.5, w: 0, })
+build({ x: 25, y: 6, z: 8.5, w: 0, })
+build({ x: -15, y: 6, z: 8.5, w: 0, })
+build({ x: 5, y: 0, z: 8.5, w: 0, })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// __ __ __ __ __ __ __ __ __ __ __
+// ENEMIES
 
 let enemyCollision = (event) => {
   if(event.body.userData.collisionClass == "userProjectile" || event.target.userData.collisionClass == "userProjectile") {
@@ -189,26 +232,6 @@ let enemyCollision = (event) => {
     }
   } else if(event.body.userData.collisionClass == "player" || event.target.userData.collisionClass == "player") {}
 }
-
-const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-light.position.set(0,30,0)
-scene.add( light );
-
-let { roomGroup, cannonBodies } = makeRoom(20, 12, 30, 0x595151);
-scene.add(roomGroup);
-for (const body of cannonBodies) {
-  body.userData = { collisionClass: 'wall' }
-  world.addBody(body);
-}
-
-
-
-
-
-
-
-// __ __ __ __ __ __ __ __ __ __ __
-// ENEMIES
 
 let spawn = () => {
   let x = wave + 1;
@@ -543,9 +566,9 @@ let updateGame = () => {
 
 // add console.logs
 setInterval(() => {
-  console.log("\nBODY POSITION Y: ", PLAYER.body.position.y);
+  // console.log("\nBODY POSITION Y: ", PLAYER.body.position.y);
   // console.log(PLAYER.body)
-  console.log("VELOCITY: ",PLAYER.body.velocity);
+  // console.log("VELOCITY: ",PLAYER.body.velocity);
   // console.log("\nCAMERA", camera.position.y);
   // console.log("FLOOR: ", floorBody.position);
 }, 3000);
