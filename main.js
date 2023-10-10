@@ -7,6 +7,7 @@ import Player from './player.js';
 import Pawn from './enemies/pawn.js';
 import Pea_Shooter from './weapons/pea_shooter.js';
 import makeRamp from './helpers/makeRamp.js';
+import makeRoom from './helpers/makeRoom.js';
 
 
 // camera / movement
@@ -72,7 +73,7 @@ let handleDMG = (enemy, player) => {
 let init = () => {
   scene.add(floorMesh);
   world.addBody(floorBody);
-  scene.add(zero)
+  // scene.add(zero)
   scene.add(xLine)
   scene.add(yLine)
   create_player_body(PLAYER)
@@ -173,8 +174,8 @@ let playerCollision = (event) => {
 }
 
 
-let zero = makeMesh(1,50, 1, 0x53D996);
-zero.position.set(0,0,0)
+// let zero = makeMesh(1,50, 1, 0x53D996);
+// zero.position.set(0,0,0)
 
 let xLine = makeMesh(500, 0.2, 1, 0x910000);
 xLine.position.set(0,0,0);
@@ -218,6 +219,20 @@ let enemyCollision = (event) => {
 
   }
 }
+
+const light = new THREE.AmbientLight( 0x404040 ); // soft white light
+light.position.set(0,30,0)
+scene.add( light );
+
+let { roomGroup, cannonBodies } = makeRoom(20, 12, 30, 0x595151);
+scene.add(roomGroup);
+for (const body of cannonBodies) {
+  body.userData = { collisionClass: 'wall' }
+  world.addBody(body);
+}
+
+
+
 
 let spawn = () => {
   let x = wave + 1;
