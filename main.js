@@ -136,7 +136,7 @@ const floorShape = new CANNON.Plane();
 let floorBody = new CANNON.Body({ mass: 0, shape: floorShape });
 floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
-console.log(floorBody);
+// console.log(floorBody);
 floorBody.collisionFilterGroup = 1;
 floorBody.collisionFilterMask = -1;
 
@@ -155,13 +155,14 @@ let create_player_body = (player) => {
 }
 
 let playerCollision = (event) => {
-  
+  if(event.body.userData.collisionClass == "floor") { isJumping=false }
+  // if(event.body.userData.collisionClass != "floor") { console.log(event) }
 }
 
 // let zero = makeMesh(1,50, 1, 0x53D996);
 // zero.position.set(0,0,0)
 
-let xLine = makeMesh(500, 0.2, 1, 0x910000);
+let xLine = makeMesh(500, 0.2, 1, 0x700050);
 xLine.position.set(0,0,0);
 
 let yLine = makeMesh(1, 0.2, 500, 0x910000);
@@ -187,21 +188,39 @@ const light = new THREE.AmbientLight( 0x404040 ); // soft white light
 light.position.set(0,30,0)
 scene.add( light );
 
-let build = (offset) => {
-  let { roomGroup, cannonBodies } = makeRoom(20, 12, 30, 0x595151);
+let build = (position, angle, options) => {
+  let roomGroup = makeRoom(position, options);
+  roomGroup.traverse((mesh) => {
+    if(mesh.isMesh && mesh.userData.physicsBody != undefined) {
+      let body = mesh.userData.physicsBody;
+      function rotateObject(object, axis, angle) {
+        let quaternion = new THREE.Quaternion().setFromAxisAngle(axis.normalize(), angle);
+        object.quaternion.multiplyQuaternions(quaternion, object.quaternion);
+        let inverseQuaternion = quaternion.clone().conjugate();
+        object.position.applyQuaternion(inverseQuaternion);
+
+        body.position.copy(object.position);
+        body.quaternion.copy(object.quaternion)
+      }
+
+      // Assuming 'object' is the Three.js object you want to rotate
+      let axis = new THREE.Vector3(0, 1, 0); // The axis around which you want to rotate
+      rotateObject(mesh, axis, angle);
+      world.addBody(body);
+    }
+  })
   scene.add(roomGroup);
-  for (const body of cannonBodies) {
-    let origin = new CANNON.Vec3().copy(body.position);
-    body.position = new CANNON.Vec3(origin.x + offset.x, origin.y + offset.y, origin.z + offset.z);
-    body.userData.mesh.position.copy(body.position)
-    world.addBody(body);
-  }
 }
 
-build({ x: 5, y: 6, z: 8.5, w: 0, })
-build({ x: 25, y: 6, z: 8.5, w: 0, })
-build({ x: -15, y: 6, z: 8.5, w: 0, })
-build({ x: 5, y: 0, z: 8.5, w: 0, })
+build(new THREE.Vector3(0,0,10), (Math.PI / 2)*2, {w: 20, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: true, frontwall: false})
+build(new THREE.Vector3(0, 0, 0), 0, {w: 20, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: true, frontwall: false})
+build(new THREE.Vector3(-5, 0, 10), (Math.PI / 2), {w: 10, h: 12, d: 30, leftwall: true, rightwall: true, color: 0x595151, backwall: false, frontwall: false})
+build(new THREE.Vector3(5, 0, 10), (Math.PI / 2)*3, {w: 10, h: 12, d: 30, leftwall: true, rightwall: true, color: 0x595151, backwall: false, frontwall: false})
+build(new THREE.Vector3(-5,0,40), (Math.PI / 2), {w: 10, h: 12, d: 10, color: 0x595151, leftwall: true, rightwall: false, backwall: true, frontwall: false})
+build(new THREE.Vector3(45,0,-30), (Math.PI / 2)*2, {w: 10, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: false, frontwall: false})
+// build({ x: 25, y: 6, z: 8.5, w: 0, })
+// build({ x: -15, y: 6, z: 8.5, w: 0, })
+// build({ x: 5, y: 0, z: 8.5, w: 0, })
 
 
 
@@ -396,25 +415,27 @@ document.addEventListener("keydown", (event) => {
 
 // Define the jump function
 function jump() {
+  if(!isJumping) {
     isJumping = true;
     jumpStartTime = Date.now();
     PLAYER.body.velocity.y = 10;
   
-    function animateJump() {
-      const currentTime = Date.now();
-      const elapsedTime = currentTime - jumpStartTime;
+    // function animateJump() {
+    //   const currentTime = Date.now();
+    //   const elapsedTime = currentTime - jumpStartTime;
   
-      if (elapsedTime >= jumpDuration) {
-        isJumping = false;
-        return;
-      }
-      const t = elapsedTime / jumpDuration;
-      requestAnimationFrame(animateJump);
-    }
+    //   if (elapsedTime >= jumpDuration) {
+    //     isJumping = false;
+    //     return;
+    //   }
+    //   const t = elapsedTime / jumpDuration;
+    //   requestAnimationFrame(animateJump);
+    // }
 
-    animateJump();
+    // animateJump();
+
+  }
 }
-
 
 // _________________________________________
 // Mouse controls

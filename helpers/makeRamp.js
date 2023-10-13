@@ -22,7 +22,7 @@ export default (w, h) => {
 
     floorBody.collisionFilterGroup = 1;
     floorBody.collisionFilterMask = -1;
-    floorBody.userData = { collisionClass: "floor_ramp" }
+    floorBody.userData = { collisionClass: "floor" }
 
     return [floorMesh, floorBody];
 }
