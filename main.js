@@ -9,6 +9,10 @@ import Pea_Shooter from './weapons/pea_shooter.js';
 import makeRamp from './helpers/makeRamp.js';
 import makeRoom from './helpers/makeRoom.js';
 
+import map_functions from "./map.js";
+
+import small_ammo from './items/small_ammo.js';
+
 
 // camera / movement
 let sensitivity = 0.0002; // CEMERA SENS ** ** **
@@ -28,6 +32,8 @@ let enemies = {}
 let wave = 1;
 let waves = [];
 
+let active_items = [];
+let itemsToRemove = [];
 
 
 window.speed = (n=0.25) => {
@@ -44,11 +50,11 @@ window.sens = (n=0.0002) => {
   } else { return ("invalid sensitivity value") }
 }
 
-window.position = (x, y, z) => {
-  if(typeof x == "number" && typeof y == "number" && typeof z == "number") {
-    camera.position.set(x, y, z)
-  }
-}
+// window.position = (x, y, z) => {
+//   if(typeof x == "number" && typeof y == "number" && typeof z == "number") {
+//     camera.position.set(x, y, z)
+//   }
+// }
 
 
 let updateAmmo = (player) => {
@@ -57,7 +63,15 @@ let updateAmmo = (player) => {
 
 
   mag.textContent = player.weapon.inMagazine;
-  reserve.textContent = player.weapon.inReserve;
+  for(let i = 0; i < player.inventory.length; i++) {
+    if(player.inventory[i] != undefined) {
+      if(player.inventory[i].id == player.weapon.ammo_id) {
+        reserve.textContent = player.inventory[i].count;
+        break
+      }
+    }
+  }
+  // reserve.textContent = player.weapon.inReserve;
 }
 
 let updateHP = (player) => {
@@ -77,9 +91,13 @@ let init = () => {
   scene.add(xLine)
   scene.add(yLine)
   create_player_body(PLAYER)
-  updateAmmo(PLAYER);
-  updateHP(PLAYER)
+
   spawn();
+  build_inventory();
+  giveItem(new small_ammo(30));
+  giveItem(new small_ammo(30));
+  updateAmmo(PLAYER);
+  updateHP(PLAYER);
 }
 
 
@@ -91,7 +109,7 @@ const scene = new THREE.Scene();
 // CAMERA ** ** **
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(2,5,0);
-camera.lookAt(0,5,0);
+// camera.lookAt(0,5,-5);
 
 
 // Renderer
@@ -119,11 +137,6 @@ solver.tolerance = 0.1;
 world.solver = new CANNON.SplitSolver(solver);
 world.solver.iterations = 7;
 
-
-let [rampMesh, rampBody] = makeRamp(10, 10);
-rampBody.position.set(5,2.5,5);
-scene.add(rampMesh);
-world.addBody(rampBody)
 
 
 // FLOOR
@@ -178,11 +191,121 @@ let get_random = (n) => {
 }
 
 
+//`./item_images/${PLAYER.inventory[i].item_img}`;
+let updateInventory = () => {
+  let inv = document.getElementById("items-wrapper");
+  // console.log(inv.childNodes)
+  inv.childNodes.forEach((cell,i) => {
+    if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
+
+      let img = document.createElement("img");
+      img.src = `./item_images/${PLAYER.inventory[i].img}`;
+      img.classList.add("item");
+
+      let counter = document.createElement("div");
+      counter.classList.add("counter");
+      counter.textContent = PLAYER.inventory[i].count;
+
+      cell.appendChild(img);
+      cell.appendChild(counter);
+
+    } else if (PLAYER.inventory[i] != undefined && cell.childNodes.length>1) {
+      cell.childNodes[1].textContent = PLAYER.inventory[i].count;
+    } else {
+      if(cell.childNodes.length>0) {
+        for(let i = 0; i < cell.childNodes; i++) { cell.removeChild(cell.childNodes[i]) }
+      }
+    }
+  })
+}
+
+
+let isInventoryOpen = false;
+let toggle_inventory = () => {
+  let inv = document.getElementById("inventory");
+  if(isInventoryOpen) {
+    inv.close();
+    isInventoryOpen = false;
+  } else {
+    updateInventory();
+    inv.showModal();
+    isInventoryOpen = true;
+  }
+}
+
+
+let giveItem = (item) => {
+  if(item.isStack) {
+    let didGive = false;
+    for(let i = 0; i < PLAYER.inventory.length; i++) {
+      if(!didGive && PLAYER.inventory[i] != undefined) {
+        if(item.id == PLAYER.inventory[i].id) {
+          PLAYER.inventory[i].count += item.count;
+          didGive = true;
+          break
+        }
+      }
+    }
+    if(!didGive) {
+      for(let i = 0; i < PLAYER.inventory.length; i++) {
+        if(PLAYER.inventory[i] == undefined) {
+          PLAYER.inventory[i] = item;
+          break
+        }
+      }
+    }
+  } else {
+    let didGive = false;
+    for(let i = 0; i < PLAYER.inventory.length; i++) {
+      if(PLAYER.inventory[i] == undefined) {
+        PLAYER.inventory[i] = item;
+        break
+      }
+    }
+    if(!didGive) { console.log("inventory full") }
+  }
+  // console.log(PLAYER.inventory)
+}
+
+
+let build_inventory = () => {
+  
+  let inventory = new Array(40).fill(undefined);
+  let element = document.getElementById("items-wrapper");
+  inventory.forEach((item, i) => {
+    let div = document.createElement("div");
+    div.classList.add("inventory-cell")
+    element.appendChild(div);
+  })
+  PLAYER.inventory = inventory;
+}
+
+let test_ammo = new small_ammo(30);
+console.log(test_ammo);
+
+let dropItem = (item, position) => {
+  console.log("DROPPING")
+  console.log(item)
+  item.body.position.set(position.x, position.y, position.z)
+  item.body.addEventListener('collide', (event) => {
+    if(event.body.userData.collisionClass == "player" && !item.body.userData.hasBeenCollected) {
+      item.body.userData.hasBeenCollected = true;
+      giveItem(item);
+      item.toBeDeleted = true;
+    }
+  })
+  active_items.push({item, createdAt: Date.now()})
+  world.addBody(item.body);
+  scene.add(item.mesh);
+}
+
+dropItem(test_ammo, new CANNON.Vec3(0,1,-20))
+
+
 
 //
 // WORLD GEN
 //
-
 
 const light = new THREE.AmbientLight( 0x404040 ); // soft white light
 light.position.set(0,30,0)
@@ -212,15 +335,15 @@ let build = (position, angle, options) => {
   scene.add(roomGroup);
 }
 
-build(new THREE.Vector3(0,0,10), (Math.PI / 2)*2, {w: 20, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: true, frontwall: false})
-build(new THREE.Vector3(0, 0, 0), 0, {w: 20, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: true, frontwall: false})
-build(new THREE.Vector3(-5, 0, 10), (Math.PI / 2), {w: 10, h: 12, d: 30, leftwall: true, rightwall: true, color: 0x595151, backwall: false, frontwall: false})
-build(new THREE.Vector3(5, 0, 10), (Math.PI / 2)*3, {w: 10, h: 12, d: 30, leftwall: true, rightwall: true, color: 0x595151, backwall: false, frontwall: false})
-build(new THREE.Vector3(-5,0,40), (Math.PI / 2), {w: 10, h: 12, d: 10, color: 0x595151, leftwall: true, rightwall: false, backwall: true, frontwall: false})
-build(new THREE.Vector3(45,0,-30), (Math.PI / 2)*2, {w: 10, h: 12, d: 30, color: 0x595151, leftwall: true, rightwall: true, backwall: false, frontwall: false})
-// build({ x: 25, y: 6, z: 8.5, w: 0, })
-// build({ x: -15, y: 6, z: 8.5, w: 0, })
-// build({ x: 5, y: 0, z: 8.5, w: 0, })
+let [rampMesh, rampBody] = makeRamp(5, 10, {rotation: (-Math.PI / 4), angle: (-Math.PI / 6)});
+rampBody.position.set(7.5, 2.5, 20);
+scene.add(rampMesh);
+world.addBody(rampBody);
+
+map_functions.forEach(args => { build(args[0], args[1], args[2]) })
+// position, rotation, options
+
+
 
 
 
@@ -330,6 +453,9 @@ let onKeyDown = (event) => {
     case "r":
       reload(PLAYER);
       break
+    case "i":
+      toggle_inventory();
+      break
   }
 }
 
@@ -395,7 +521,7 @@ let isReloading = false;
 let reload = (player) => {
   if(!isReloading) {
     isReloading = true;
-    setTimeout(() => {player.weapon.reload(); isReloading=false; updateAmmo(PLAYER)}, player.weapon.reloadTime);
+    setTimeout(() => {player.weapon.reload(player); isReloading=false; updateAmmo(PLAYER)}, player.weapon.reloadTime);
   } else {}
 }
 
@@ -484,7 +610,7 @@ let projectiles = [];
 
 function createProjectile(player) {
   if(player.weapon.inMagazine > 0 && !isReloading) {
-    player.weapon.removeAmmo()
+    player.weapon.removeAmmo(player)
     updateAmmo(player)
     let p = player.weapon.createProjectile(camera);
     for(let i = 0; i < p.body.length; i++) {
@@ -570,6 +696,23 @@ let updateEnemyPhysics = () => {
   })
 }
 
+let removeItems = (item, i) => {
+  world.remove(item.body);
+  scene.remove(item.mesh);
+}
+
+let updateItems = () => {
+  active_items.forEach((item, i) => {
+    item.item.mesh.position.copy(item.item.body.position);
+    item.item.mesh.rotation.y += 0.05;
+    item.item.mesh.rotation.z += 0.01;
+    if(item.item.toBeDeleted == true) {
+      removeItems(item.item)
+      active_items.splice(i, 1);
+    }
+  })
+}
+
 let updateGame = () => {
 
   rampMesh.position.copy(rampBody.position);
@@ -607,12 +750,13 @@ scene.add(playerMesh);
 // Animation loop
 const animate = () => {
 
-  world.step(1/60);
+  world.step(1/120);
 
   update_projectiles();
   updateEnemyPhysics();
   playerInputs();
   updateGame();
+  updateItems();
 
   bodiesToRemove.forEach(removeBodies);
   meshToRemove.forEach(removeMesh);

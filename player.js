@@ -9,11 +9,11 @@ export default class Player {
         this.id = id;
         this.hp = 100;
         this.armor = 0;
-        this.speed = 40;
+        this.speed = 80;
         this.acc = 0.25;
         this.dec = 0.2;
         this.groundHeight = 0.25;
-        this.inventory = {};
+        this.inventory = [];
         this.weapon = new Pea_Shooter(600);
         this.mesh;
         this.body;

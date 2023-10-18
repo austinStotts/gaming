@@ -5,6 +5,7 @@ export default class Pawn {
         this.damage = 25;
         this.body = body;
         this.mesh = mesh;
+        this.drops = [{small_ammo: 10}]
     }
 
     update_hp (n) {
