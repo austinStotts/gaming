@@ -14,7 +14,8 @@ export default class Player {
         this.dec = 0.2;
         this.groundHeight = 0.25;
         this.inventory = [];
-        this.weapon = new Pea_Shooter(600);
+        this.weapon = new Pea_Shooter();
+        this.secondary = new Shotgun();
         this.mesh;
         this.body;
     }

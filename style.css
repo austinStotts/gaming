@@ -91,26 +91,36 @@
 
 #inventory {
     position: fixed;
-    top: 50%;
-    left: 50%;
-    z-index: 101;
-    -webkit-transform: translate(-50%, -50%);
-    transform: translate(-50%, -50%);
+    z-index: 99;
+    background-color: gray;
+    border: 0px;
+    border-radius: 15px;
+    filter: drop-shadow(0 0 10px rgb(0, 0, 0));
+}
+
+#inventory:focus {
+    outline: none;
 }
 
 .inventory-wrapper {
-
+    border: 1px dashed greenyellow;
 }
+
+.character-wrapper {
+    height: 100px;
+}
+
 .items-wrapper {
     display: grid;
-    grid-template-columns: repeat(10, 40px);
-    row-gap: 10px;
+    grid-template-columns: repeat(10, 48px);
+    /* row-gap: 0.125px; */
+    /* column-gap: 2px; */
 }
 
 .inventory-cell {
-    border: 1px solid red;
-    width: 30px;
-    height: 30px;
+    border: 1px solid black;
+    width: 48px;
+    height: 48px;
     transition-duration: 0.1s;
     background-color: transparent;
     margin-left: 5px;
@@ -126,8 +136,9 @@
 }
 
 .item {
-    width: 30px;
-    height: 30px;
+    width: 48px;
+    height: 48px;
+    pointer-events: none;
 }
 
 .counter {
@@ -138,4 +149,48 @@
     font-weight: bolder;
     font-family: monospace;
     color: black;
+    pointer-events: none;
+}
+
+::-moz-selection {
+    background-color: transparent;
+    color: #000;
+}
+
+::selection {
+    background-color: transparent;
+    color: #000;
+}
+
+
+.armor-wrapper {
+    display: inline-block;
+    height: 100%;
+    width: 160px;
+    border: 1px solid mediumpurple;
+}
+
+.stats-wrapper {
+    display: inline-block;
+    height: 100%;
+    width: 160px;
+    border: 1px solid salmon;
+}
+
+.weapons-wrapper {
+    float: right;
+    display: inline-block;
+    height: 100%;
+    width: 160px;
+    border: 1px solid royalblue;
+}
+
+.weapon-label {
+    font-family: monospace;
+}
+
+.weapon-model {
+    width: 160px;
+    height: 30px;
+    border: 1px solid blue;
 }

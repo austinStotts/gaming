@@ -3,6 +3,7 @@ import * as CANNON from "cannon";
 
 export default class Pea_Shooter {
     constructor() {
+        this.display_name = "Pea Shooter"
         this.projectileDMG = 5;
         this.magazineSize = 30;
         this.inMagazine = 0;
@@ -10,7 +11,7 @@ export default class Pea_Shooter {
         this.ammo_id = 'small_ammo';
         this.reloadTime = 800; // in milliseconds
         this.removeAfterMS = 5000; // in milliseconds
-        this.projectile_speed = 250; // in milliseconds
+        this.projectile_speed = 180; // in milliseconds
     }
 
     reload (player) {
@@ -40,16 +41,17 @@ export default class Pea_Shooter {
 
     createProjectile (camera) {
         const geometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const material = new THREE.MeshBasicMaterial({ color: 0x000000 });
+        const material = new THREE.MeshBasicMaterial({ color: 0xBB00BB });
         const projectileMesh = new THREE.Mesh(geometry, material);
     
         const mass = 1; // Mass of the projectile
-        const projectileShape = new CANNON.Sphere(0.5); // Radius of the sphere
+        const projectileShape = new CANNON.Sphere(0.4); // Radius of the sphere
         const projectileBody = new CANNON.Body({ mass, shape: projectileShape, collisionFilterGroup: 1, collisionFilterMask: -1 });
         projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeAfterMS: this.removeAfterMS}
-        projectileBody.ccdSpeedThreshold = 100;  // Adjust the threshold as needed
-        projectileBody.ccdIterations = 100;
+        projectileBody.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
+        projectileBody.ccdIterations = 10;
         projectileMesh.position.copy(camera.position);
+        // projectileMesh.position.x += 0.5;
         projectileBody.position.copy(projectileMesh.position);
         const cameraDirection = new THREE.Vector3();
         camera.getWorldDirection(cameraDirection);

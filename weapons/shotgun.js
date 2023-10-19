@@ -11,6 +11,7 @@ let get_random = (n) => {
 
 export default class Shotgun {
     constructor(ammo=0, magazineSize=8) {
+        this.display_name = "Shotgun"
         this.projectileDMG = 4;
         this.magazineSize = magazineSize;
         this.inMagazine = magazineSize;

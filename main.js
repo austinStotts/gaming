@@ -12,6 +12,7 @@ import makeRoom from './helpers/makeRoom.js';
 import map_functions from "./map.js";
 
 import small_ammo from './items/small_ammo.js';
+import shotgun_ammo from './items/shotgun_ammo.js'
 
 
 // camera / movement
@@ -34,6 +35,7 @@ let waves = [];
 
 let active_items = [];
 let itemsToRemove = [];
+
 
 
 window.speed = (n=0.25) => {
@@ -74,6 +76,13 @@ let updateAmmo = (player) => {
   // reserve.textContent = player.weapon.inReserve;
 }
 
+let update_inv_ui = () => {
+  let w1_label = document.getElementById("weapon-one-label");
+  w1_label.textContent = PLAYER.weapon.display_name
+  let w2_label = document.getElementById("weapon-two-label");
+  w2_label.textContent = PLAYER.secondary.display_name
+}
+
 let updateHP = (player) => {
   let hp = document.getElementById("hp");
   hp.value = player.hp;
@@ -98,6 +107,7 @@ let init = () => {
   giveItem(new small_ammo(30));
   updateAmmo(PLAYER);
   updateHP(PLAYER);
+  update_inv_ui();
 }
 
 
@@ -191,16 +201,19 @@ let get_random = (n) => {
 }
 
 
+
+
 //`./item_images/${PLAYER.inventory[i].item_img}`;
 let updateInventory = () => {
   let inv = document.getElementById("items-wrapper");
-  // console.log(inv.childNodes)
+  console.log(inv.childNodes)
   inv.childNodes.forEach((cell,i) => {
     if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
 
       let img = document.createElement("img");
       img.src = `./item_images/${PLAYER.inventory[i].img}`;
       img.classList.add("item");
+      img.ondragstart = () => false
 
       let counter = document.createElement("div");
       counter.classList.add("counter");
@@ -211,9 +224,13 @@ let updateInventory = () => {
 
     } else if (PLAYER.inventory[i] != undefined && cell.childNodes.length>1) {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
+      cell.childNodes[0].src = `./item_images/${PLAYER.inventory[i].img}`
     } else {
       if(cell.childNodes.length>0) {
-        for(let i = 0; i < cell.childNodes; i++) { cell.removeChild(cell.childNodes[i]) }
+        console.log("REMOVING", i)
+        // for(let i = 0; i < cell.childNodes.length; i++) { cell.removeChild(cell.childNodes[i]) }
+        cell.removeChild(cell.childNodes[1])
+        cell.removeChild(cell.childNodes[0])
       }
     }
   })
@@ -226,10 +243,23 @@ let toggle_inventory = () => {
   if(isInventoryOpen) {
     inv.close();
     isInventoryOpen = false;
+    toggleCursorLock();
   } else {
     updateInventory();
     inv.showModal();
     isInventoryOpen = true;
+    toggleCursorLock();
+  }
+}
+
+let toggleCursorLock = () => {
+  if(!isInventoryOpen) {
+    canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+    canvas.requestPointerLock();
+  } else {
+    // canvas.exitPointerLock = canvas.exitPointerLock || canvas.mozExitPointerLock || canvas.webkitExitPointerLock;
+    document.exitPointerLock();
+    console.log("EXIT POINTER LOCK")
   }
 }
 
@@ -241,6 +271,7 @@ let giveItem = (item) => {
       if(!didGive && PLAYER.inventory[i] != undefined) {
         if(item.id == PLAYER.inventory[i].id) {
           PLAYER.inventory[i].count += item.count;
+          updateAmmo(PLAYER);
           didGive = true;
           break
         }
@@ -250,6 +281,7 @@ let giveItem = (item) => {
       for(let i = 0; i < PLAYER.inventory.length; i++) {
         if(PLAYER.inventory[i] == undefined) {
           PLAYER.inventory[i] = item;
+          updateAmmo(PLAYER);
           break
         }
       }
@@ -267,6 +299,19 @@ let giveItem = (item) => {
   // console.log(PLAYER.inventory)
 }
 
+let inv_start;
+let inv_end;
+
+let inv_drop = (event, id) => {
+  inv_end = id;
+  [PLAYER.inventory[inv_start], PLAYER.inventory[inv_end]] = [PLAYER.inventory[inv_end], PLAYER.inventory[inv_start]];
+  console.log(PLAYER.inventory)
+  updateInventory();
+}
+let inv_pickup = (event, id) => {
+  inv_start = id;
+}
+
 
 let build_inventory = () => {
   
@@ -274,18 +319,18 @@ let build_inventory = () => {
   let element = document.getElementById("items-wrapper");
   inventory.forEach((item, i) => {
     let div = document.createElement("div");
-    div.classList.add("inventory-cell")
+    div.classList.add("inventory-cell", `cellid-${i}`);
+    div.onmouseup = (e) => {inv_drop(e, i)};
+    div.onmousedown = (e) => {inv_pickup(e, i)};
     element.appendChild(div);
   })
   PLAYER.inventory = inventory;
 }
 
-let test_ammo = new small_ammo(30);
-console.log(test_ammo);
+let test_ammo = new shotgun_ammo(30);
+
 
 let dropItem = (item, position) => {
-  console.log("DROPPING")
-  console.log(item)
   item.body.position.set(position.x, position.y, position.z)
   item.body.addEventListener('collide', (event) => {
     if(event.body.userData.collisionClass == "player" && !item.body.userData.hasBeenCollected) {
@@ -299,7 +344,7 @@ let dropItem = (item, position) => {
   scene.add(item.mesh);
 }
 
-dropItem(test_ammo, new CANNON.Vec3(0,1,-20))
+dropItem(test_ammo, new CANNON.Vec3(0,1,-30))
 
 
 
@@ -335,10 +380,10 @@ let build = (position, angle, options) => {
   scene.add(roomGroup);
 }
 
-let [rampMesh, rampBody] = makeRamp(5, 10, {rotation: (-Math.PI / 4), angle: (-Math.PI / 6)});
-rampBody.position.set(7.5, 2.5, 20);
-scene.add(rampMesh);
-world.addBody(rampBody);
+// let [rampMesh, rampBody] = makeRamp(5, 10, {rotation: (-Math.PI / 4), angle: (-Math.PI / 6)});
+// rampBody.position.set(7.5, 2.5, 20);
+// scene.add(rampMesh);
+// world.addBody(rampBody);
 
 map_functions.forEach(args => { build(args[0], args[1], args[2]) })
 // position, rotation, options
@@ -364,11 +409,19 @@ map_functions.forEach(args => { build(args[0], args[1], args[2]) })
 // __ __ __ __ __ __ __ __ __ __ __
 // ENEMIES
 
+let handleDrops = (enemy) => {
+  let index = Math.ceil(Math.random() * 100);
+  if(enemy.drop_table[index] != undefined) {
+    dropItem(enemy.drop_table[index], enemy.body.position)
+  }
+}
+
 let enemyCollision = (event) => {
   if(event.body.userData.collisionClass == "userProjectile" || event.target.userData.collisionClass == "userProjectile") {
     let id = event.target.userData.id;
     if(enemies[id]) {
       if(enemies[id].update_hp(PLAYER.weapon.projectileDMG)) {
+        handleDrops(enemies[id])
         removeEnemy(event.target.userData.id);
       }
     }
@@ -480,20 +533,22 @@ window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
 
 let playerInputs = () => {
-  let velocity = new THREE.Vector3();
-  let direction = new THREE.Vector3();
-  direction.set(0, 0, 0);
+  if(!isInventoryOpen) {
+    let velocity = new THREE.Vector3();
+    let direction = new THREE.Vector3();
+    direction.set(0, 0, 0);
 
-  if (keys.W) direction.z -= 1;
-  if (keys.A) direction.x -= 1;
-  if (keys.S) direction.z += 1;
-  if (keys.D) direction.x += 1;
+    if (keys.W) direction.z -= 1;
+    if (keys.A) direction.x -= 1;
+    if (keys.S) direction.z += 1;
+    if (keys.D) direction.x += 1;
 
-  direction.normalize();
-  const rotation = new THREE.Euler(0, camera.rotation.y, 0, "XYZ");
-  velocity.copy(direction).applyEuler(rotation).multiplyScalar(PLAYER.acc);
-  let c_velocity = new CANNON.Vec3().copy(velocity);
-  PLAYER.move_player(c_velocity)
+    direction.normalize();
+    const rotation = new THREE.Euler(0, camera.rotation.y, 0, "XYZ");
+    velocity.copy(direction).applyEuler(rotation).multiplyScalar(PLAYER.acc);
+    let c_velocity = new CANNON.Vec3().copy(velocity);
+    PLAYER.move_player(c_velocity)
+  }
 }
 
 
@@ -573,7 +628,7 @@ let mouseState = {
 };
 
 document.addEventListener('mousemove', (event) => {
-  if (!keyboardState['Alt']) {
+  if (!isInventoryOpen) {
       
     cameraRotation.x -= event.movementY * sensitivity;
     cameraRotation.y -= event.movementX * sensitivity;
@@ -588,8 +643,8 @@ document.addEventListener('mousemove', (event) => {
 
 let canvas = document.querySelector("canvas");
 canvas.onclick = (e) => {
-    canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-    canvas.requestPointerLock();
+  canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+  canvas.requestPointerLock();
 }
 
 
@@ -609,7 +664,7 @@ let removeProjectile = (projectile) => {
 let projectiles = [];
 
 function createProjectile(player) {
-  if(player.weapon.inMagazine > 0 && !isReloading) {
+  if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen) {
     player.weapon.removeAmmo(player)
     updateAmmo(player)
     let p = player.weapon.createProjectile(camera);
@@ -694,6 +749,11 @@ let updateEnemyPhysics = () => {
     enemies[key].mesh.position.copy(enemies[key].body.position);
     enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
   })
+
+  if(Object.keys(enemies).length < 1) {
+    wave += 1;
+    spawn();
+  }
 }
 
 let removeItems = (item, i) => {
@@ -715,8 +775,8 @@ let updateItems = () => {
 
 let updateGame = () => {
 
-  rampMesh.position.copy(rampBody.position);
-  rampMesh.quaternion.copy(rampBody.quaternion);
+  // rampMesh.position.copy(rampBody.position);
+  // rampMesh.quaternion.copy(rampBody.quaternion);
   
   PLAYER.body.position.y += 0.004;
   playerMesh.position.copy(PLAYER.body.position);
@@ -750,7 +810,7 @@ scene.add(playerMesh);
 // Animation loop
 const animate = () => {
 
-  world.step(1/120);
+  world.step(1/60);
 
   update_projectiles();
   updateEnemyPhysics();
