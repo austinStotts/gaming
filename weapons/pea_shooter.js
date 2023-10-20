@@ -10,8 +10,10 @@ export default class Pea_Shooter {
         // this.inReserve = 0;
         this.ammo_id = 'small_ammo';
         this.reloadTime = 800; // in milliseconds
-        this.removeAfterMS = 5000; // in milliseconds
-        this.projectile_speed = 180; // in milliseconds
+        this.removeAfterMS = 3000; // in milliseconds
+        this.projectile_speed = 100; // in milliseconds
+        this.swap_time = 400;
+        this.camera_kick = 0.005;
     }
 
     reload (player) {
@@ -41,16 +43,29 @@ export default class Pea_Shooter {
 
     createProjectile (camera) {
         const geometry = new THREE.SphereGeometry(0.1, 32, 32);
-        const material = new THREE.MeshBasicMaterial({ color: 0xBB00BB });
+        const material = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
         const projectileMesh = new THREE.Mesh(geometry, material);
     
         const mass = 1; // Mass of the projectile
-        const projectileShape = new CANNON.Sphere(0.4); // Radius of the sphere
-        const projectileBody = new CANNON.Body({ mass, shape: projectileShape, collisionFilterGroup: 1, collisionFilterMask: -1 });
+        const projectileShape = new CANNON.Sphere(1.25); // Radius of the sphere
+        // projectileShape.collisionMargin = 0.05;
+        const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
         projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeAfterMS: this.removeAfterMS}
-        projectileBody.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
-        projectileBody.ccdIterations = 10;
-        projectileMesh.position.copy(camera.position);
+        projectileBody.collisionFilterGroup = 2;
+        projectileBody.collisionFilterMask = -1;
+        // projectileBody.ccdSpeedThreshold = 0.1;  // Adjust the threshold as needed
+        // projectileBody.ccdIterations = 0.5;
+        // projectileBody.ccdSweptSphereRadius = 0.2;
+        // projectileBody.collisionMargin = 0.001;
+
+        var vector = new THREE.Vector3();
+        vector.setFromMatrixPosition(camera.matrixWorld); // Get the position of the camera in the world
+        vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(0.5));
+        vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(-0.25));
+        vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).multiplyScalar(0));
+
+        projectileMesh.position.copy(vector);
+        // projectileMesh.position.
         // projectileMesh.position.x += 0.5;
         projectileBody.position.copy(projectileMesh.position);
         const cameraDirection = new THREE.Vector3();

@@ -10,21 +10,40 @@ let get_random = (n) => {
 }
 
 export default class Shotgun {
-    constructor(ammo=0, magazineSize=8) {
+    constructor() {
         this.display_name = "Shotgun"
         this.projectileDMG = 4;
-        this.magazineSize = magazineSize;
-        this.inMagazine = magazineSize;
-        this.inReserve = ammo - magazineSize;
+        this.magazineSize = 8;
+        this.inMagazine = 0;
+        // this.inReserve = ammo - magazineSize;
+        this.ammo_id = "shotgun_ammo";
         this.reloadTime = 1400; // in milliseconds
         this.spreadMultiplier = 0.05;
         this.removeAfterMS = 200; // in seconds
         this.projectile_speed = 150; // in milliseconds
+        this.swap_time = 800;
+        this.camera_kick = 0.02;
     }
 
-    reload () {
-        if(this.inReserve >= this.magazineSize - this.inMagazine) { this.inReserve += this.inMagazine; this.inMagazine = this.magazineSize; this.inReserve -= this.magazineSize; }
-        else { this.inReserve += this.inMagazine; this.inMagazine = this.inReserve; this.inReserve = 0; }
+    reload (player) {
+        let ammo_count;
+        let didFindAmmo = false;
+        let atIndex;
+        for(let i = 0; i < player.inventory.length; i++) {
+            if(player.inventory[i] != undefined) {
+                if(player.inventory[i].id == this.ammo_id) {
+                    ammo_count = player.inventory[i].count;
+                    didFindAmmo = true;
+                    atIndex = i;
+                }
+            }
+        }
+        if(didFindAmmo) {
+            if(ammo_count >= this.magazineSize - this.inMagazine) { ammo_count += this.inMagazine; this.inMagazine = this.magazineSize; ammo_count -= this.magazineSize; }
+            else { ammo_count += this.inMagazine; this.inMagazine = ammo_count; ammo_count = 0; }
+            player.inventory[atIndex].count = ammo_count;
+        } else { console.log("no ammo found") }
+
     }
 
     removeAmmo () {
@@ -41,10 +60,21 @@ export default class Shotgun {
             const projectileMesh = new THREE.Mesh(geometry, material);
         
             const mass = 15; // Mass of the projectile
-            const projectileShape = new CANNON.Sphere(0.25); // Radius of the sphere
+            const projectileShape = new CANNON.Sphere(0.75); // Radius of the sphere
             const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
+            projectileBody.collisionFilterGroup = 2;
+            projectileBody.collisionFilterMask = -1;
             projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeafterMS: this.removeAfterMS}
-            projectileMesh.position.copy(camera.position);
+            
+            var vector = new THREE.Vector3();
+            vector.setFromMatrixPosition(camera.matrixWorld); // Get the position of the camera in the world
+            vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(0.5));
+            vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(-0.25));
+            vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).multiplyScalar(0));
+    
+            projectileMesh.position.copy(vector);
+            
+            // projectileMesh.position.copy(camera.position);
             projectileBody.position.copy(projectileMesh.position);
             const cameraDirection = new THREE.Vector3();
             camera.getWorldDirection(cameraDirection);

@@ -3,7 +3,7 @@ import small_ammo from "../items/small_ammo";
 export default class Pawn {
     constructor(body, mesh) {
         this.class = "pawn";
-        this.hp = 50;
+        this.hp = 30;
         this.damage = 25;
         this.body = body;
         this.mesh = mesh;

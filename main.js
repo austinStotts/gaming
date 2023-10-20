@@ -104,7 +104,7 @@ let init = () => {
   spawn();
   build_inventory();
   giveItem(new small_ammo(30));
-  giveItem(new small_ammo(30));
+  giveItem(new small_ammo(150));
   updateAmmo(PLAYER);
   updateHP(PLAYER);
   update_inv_ui();
@@ -168,9 +168,9 @@ floorBody.collisionFilterMask = -1;
 let create_player_body = (player) => {
   let shape = new CANNON.Box(new CANNON.Vec3(1,2,1));
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
-  playerBody.position.set(2,2,0);
-  playerBody.collisionFilterGroup = 2;
-  playerBody.collisionFilterMask = -1;
+  playerBody.position.set(0,2,0);
+  playerBody.collisionFilterGroup = 1;
+  playerBody.collisionFilterMask = 1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
   playerBody.addEventListener("collide", playerCollision)
   player.set_body(playerBody)
@@ -213,7 +213,7 @@ let updateInventory = () => {
       let img = document.createElement("img");
       img.src = `./item_images/${PLAYER.inventory[i].img}`;
       img.classList.add("item");
-      img.ondragstart = () => false
+      img.ondragstart = () => false;
 
       let counter = document.createElement("div");
       counter.classList.add("counter");
@@ -348,6 +348,7 @@ dropItem(test_ammo, new CANNON.Vec3(0,1,-30))
 
 
 
+
 //
 // WORLD GEN
 //
@@ -435,7 +436,7 @@ let spawn = () => {
     let c = makeMesh(2,2,2, 0x674EA7, false);
     b.addEventListener('collide', enemyCollision) ;
     // b.fixedRotation = true;
-    b.collisionFilterGroup = 3;
+    b.collisionFilterGroup = 1;
     b.collisionFilterMask = -1;
     b.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
     b.ccdIterations = 100; 
@@ -509,6 +510,9 @@ let onKeyDown = (event) => {
     case "i":
       toggle_inventory();
       break
+    case "2":
+      swap_weapons();
+      break
   }
 }
 
@@ -580,6 +584,16 @@ let reload = (player) => {
   } else {}
 }
 
+let isSwappingWeapons = false;
+
+let swap_weapons = () => {
+  setTimeout(() => {isSwappingWeapons = false; updateAmmo(PLAYER)}, PLAYER.secondary.swap_time)
+  isSwappingWeapons = true;
+  let holder = PLAYER.weapon;
+  PLAYER.weapon = PLAYER.secondary;
+  PLAYER.secondary = holder;
+  
+}
 
 
 // JUMPING
@@ -601,19 +615,7 @@ function jump() {
     jumpStartTime = Date.now();
     PLAYER.body.velocity.y = 10;
   
-    // function animateJump() {
-    //   const currentTime = Date.now();
-    //   const elapsedTime = currentTime - jumpStartTime;
-  
-    //   if (elapsedTime >= jumpDuration) {
-    //     isJumping = false;
-    //     return;
-    //   }
-    //   const t = elapsedTime / jumpDuration;
-    //   requestAnimationFrame(animateJump);
-    // }
 
-    // animateJump();
 
   }
 }
@@ -664,14 +666,21 @@ let removeProjectile = (projectile) => {
 let projectiles = [];
 
 function createProjectile(player) {
-  if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen) {
+  if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons) {
     player.weapon.removeAmmo(player)
     updateAmmo(player)
     let p = player.weapon.createProjectile(camera);
     for(let i = 0; i < p.body.length; i++) {
       scene.add(p.mesh[i]);
       world.addBody(p.body[i]);
-  
+     
+      
+      // CAMERA KICK WIP - - - - 
+      var rotationMatrix = new THREE.Matrix4();
+      rotationMatrix.makeRotationAxis(new THREE.Vector3(1, 0, 0), player.weapon.camera_kick);
+      camera.applyMatrix4(rotationMatrix);
+      cameraRotation.x += player.weapon.camera_kick;
+
       projectiles.push({
         mesh: p.mesh[i],
         body: p.body[i],
@@ -712,13 +721,13 @@ function stopContinuousMove() {
 }
 
 // Event listener for mouse down
-document.addEventListener('mousedown', () => {
+canvas.addEventListener('mousedown', () => {
   isMouseHeldDown = true;
   startContinuousMove();
 });
 
 // Event listener for mouse up
-document.addEventListener('mouseup', () => {
+canvas.addEventListener('mouseup', () => {
   isMouseHeldDown = false;
   stopContinuousMove();
 });
@@ -810,7 +819,8 @@ scene.add(playerMesh);
 // Animation loop
 const animate = () => {
 
-  world.step(1/60);
+  let rate = 1/60;
+  world.step(rate, rate, 10);
 
   update_projectiles();
   updateEnemyPhysics();
