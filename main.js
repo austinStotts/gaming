@@ -35,7 +35,7 @@ let waves = [];
 
 let active_items = [];
 let itemsToRemove = [];
-
+let isTakingDamage = false;
 
 
 window.speed = (n=0.25) => {
@@ -59,20 +59,24 @@ window.sens = (n=0.0002) => {
 // }
 
 
+
 let updateAmmo = (player) => {
   let mag = document.getElementById("mag");
   let reserve = document.getElementById("reserve");
 
 
   mag.textContent = player.weapon.inMagazine;
+  let foundAmmo = false;
   for(let i = 0; i < player.inventory.length; i++) {
     if(player.inventory[i] != undefined) {
       if(player.inventory[i].id == player.weapon.ammo_id) {
         reserve.textContent = player.inventory[i].count;
+        foundAmmo = true;
         break
       }
     }
   }
+  if(!foundAmmo) {reserve.textContent = 0}
   // reserve.textContent = player.weapon.inReserve;
 }
 
@@ -108,6 +112,33 @@ let init = () => {
   updateAmmo(PLAYER);
   updateHP(PLAYER);
   update_inv_ui();
+}
+
+document.getElementById("try-again").addEventListener("click", () => { reset() })
+
+let reset = () => {
+  clearEnemies();
+  clearItems();
+
+  let old_player = JSON.parse(window.localStorage.getItem("player_data"));
+  PLAYER.hp = old_player.hp;
+  PLAYER.inventory = old_player.inventory;
+  wave = old_player.wave;
+  PLAYER.weapon = old_player.weapon;
+  PLAYER.secondary = old_player.secondary;
+  PLAYER.body.position.set(0, 2, 0);
+  isAlreadyDead = false;
+  gameover.close();
+  isDeathOpen = false;
+  toggleCursorLock();
+  document.getElementById("grayout").style.display = "none"
+  spawn();
+  updateHP();
+  updateAmmo();
+  // delete all enemies
+  // save inv and stats after each wave
+  // reset all values to pre wave
+  // move player and respawn enemies
 }
 
 
@@ -211,7 +242,7 @@ let updateInventory = () => {
     if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
 
       let img = document.createElement("img");
-      img.src = `./item_images/${PLAYER.inventory[i].img}`;
+      img.src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`;
       img.classList.add("item");
       img.ondragstart = () => false;
 
@@ -224,7 +255,7 @@ let updateInventory = () => {
 
     } else if (PLAYER.inventory[i] != undefined && cell.childNodes.length>1) {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
-      cell.childNodes[0].src = `./item_images/${PLAYER.inventory[i].img}`
+      cell.childNodes[0].src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`
     } else {
       if(cell.childNodes.length>0) {
         console.log("REMOVING", i)
@@ -235,6 +266,7 @@ let updateInventory = () => {
     }
   })
 }
+
 
 
 let isInventoryOpen = false;
@@ -253,7 +285,7 @@ let toggle_inventory = () => {
 }
 
 let toggleCursorLock = () => {
-  if(!isInventoryOpen) {
+  if(!isInventoryOpen && !isAlreadyDead) {
     canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
     canvas.requestPointerLock();
   } else {
@@ -426,7 +458,15 @@ let enemyCollision = (event) => {
         removeEnemy(event.target.userData.id);
       }
     }
-  } else if(event.body.userData.collisionClass == "player" || event.target.userData.collisionClass == "player") {}
+  } else if(event.body.userData.collisionClass == "player" || event.target.userData.collisionClass == "player") {
+    let id = event.target.userData.id
+    if(!isTakingDamage) {
+      isTakingDamage = true;
+      handleDMG(enemies[id], PLAYER);
+      setTimeout(() => { isTakingDamage = false }, 800)
+    }
+    
+  }
 }
 
 let spawn = () => {
@@ -513,6 +553,9 @@ let onKeyDown = (event) => {
     case "2":
       swap_weapons();
       break
+    case "k":
+      clearEnemies();
+      break
   }
 }
 
@@ -537,7 +580,7 @@ window.addEventListener("keydown", onKeyDown);
 window.addEventListener("keyup", onKeyUp);
 
 let playerInputs = () => {
-  if(!isInventoryOpen) {
+  if(!isInventoryOpen && !isAlreadyDead) {
     let velocity = new THREE.Vector3();
     let direction = new THREE.Vector3();
     direction.set(0, 0, 0);
@@ -587,12 +630,31 @@ let reload = (player) => {
 let isSwappingWeapons = false;
 
 let swap_weapons = () => {
+  animateSwap();
   setTimeout(() => {isSwappingWeapons = false; updateAmmo(PLAYER)}, PLAYER.secondary.swap_time)
   isSwappingWeapons = true;
   let holder = PLAYER.weapon;
   PLAYER.weapon = PLAYER.secondary;
   PLAYER.secondary = holder;
-  
+  // updateAmmo(PLAYER);
+}
+
+let animateSwap = () => {
+  let start = Date.now();
+  let time = PLAYER.secondary.swap_time;
+  let progress = document.getElementById("weapon-loader");
+  progress.style.display = "block";
+  let id = setInterval(() => {
+    console.log(progress.value)
+    if(Date.now() >= start + time) {
+      progress.value = 0;
+      progress.style.display = "none";
+      clearInterval(id)
+    } else {
+      progress.value += 1;
+    }
+    
+  },time/100)
 }
 
 
@@ -657,30 +719,30 @@ canvas.onclick = (e) => {
 let removeProjectile = (projectile) => {
   let deleteAt = projectile.createdAt + projectile.removeAfterMS;
   if(deleteAt < Date.now()) { 
+    console.log(projectiles)
     world.remove(projectile.body);
-    scene.remove(projectile.mesh)
+    scene.remove(projectile.mesh);
     return true
-  }
+  } else { return false }
 }
 
 let projectiles = [];
 
 function createProjectile(player) {
-  if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons) {
-    player.weapon.removeAmmo(player)
-    updateAmmo(player)
+  if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons && !isAlreadyDead) {
+    player.weapon.removeAmmo(player);
+    updateAmmo(player);
     let p = player.weapon.createProjectile(camera);
+
+    // CAMERA KICK WIP - - - - 
+    var rotationMatrix = new THREE.Matrix4();
+    rotationMatrix.makeRotationAxis(new THREE.Vector3(1, 0, 0), player.weapon.camera_kick);
+    camera.applyMatrix4(rotationMatrix);
+    cameraRotation.x += player.weapon.camera_kick;
+
     for(let i = 0; i < p.body.length; i++) {
       scene.add(p.mesh[i]);
       world.addBody(p.body[i]);
-     
-      
-      // CAMERA KICK WIP - - - - 
-      var rotationMatrix = new THREE.Matrix4();
-      rotationMatrix.makeRotationAxis(new THREE.Vector3(1, 0, 0), player.weapon.camera_kick);
-      camera.applyMatrix4(rotationMatrix);
-      cameraRotation.x += player.weapon.camera_kick;
-
       projectiles.push({
         mesh: p.mesh[i],
         body: p.body[i],
@@ -749,7 +811,30 @@ let removeMesh = (mesh, i) => {
   }
 }
 
+let saveWave = () => {
+  window.localStorage.setItem("player_data", JSON.stringify({
+    hp: PLAYER.hp,
+    inventory: PLAYER.inventory,
+    weapon: PLAYER.weapon,
+    secondary: PLAYER.secondary,
+    wave: wave
+  }))
+}
 
+let clearItems = () => {
+  active_items.forEach(item => {
+    itemsToRemove.push(item);
+  })
+  active_items = [];
+}
+
+let clearEnemies = () => {
+  Object.keys(enemies).forEach((key) => {
+    bodiesToRemove.push(enemies[key].body);
+    scene.remove(enemies[key].mesh);
+    delete enemies[key];
+  })
+}
 
 // update every frame
 let updateEnemyPhysics = () => {
@@ -761,6 +846,7 @@ let updateEnemyPhysics = () => {
 
   if(Object.keys(enemies).length < 1) {
     wave += 1;
+    saveWave();
     spawn();
   }
 }
@@ -796,6 +882,30 @@ let updateGame = () => {
 }
 
 
+let isDeathOpen = false;
+let isAlreadyDead = false;
+let gameover = document.getElementById("gameover");
+
+let checkHP = () => {
+  if(!isAlreadyDead) {
+    if(PLAYER.hp <= 0) {
+      isAlreadyDead = true;
+      console.log("YOU DIED");
+
+      document.getElementById("grayout").style.display = "block"
+      if(isDeathOpen) {
+        gameover.close();
+        isDeathOpen = false;
+        toggleCursorLock();
+      } else {
+        gameover.showModal();
+        isDeathOpen = true;
+        toggleCursorLock();
+      }
+    }
+  } 
+}
+
 
 // add console.logs
 setInterval(() => {
@@ -827,6 +937,7 @@ const animate = () => {
   playerInputs();
   updateGame();
   updateItems();
+  checkHP();
 
   bodiesToRemove.forEach(removeBodies);
   meshToRemove.forEach(removeMesh);

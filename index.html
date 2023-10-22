@@ -19,8 +19,10 @@
 	</head>
     <!-- <div id="info">Description</div> -->
 	<body>
+        <div id="grayout" style="display: none;"></div>
         <div class="crosshair-wrapper"><span class="crosshair-v"></span><span class="crosshair-h"></span></div>
         <div class="hp-wrapper"><span class="hp-label">hp:</span><progress id="hp" class="hp-bar" max="100"></progress></div>
+        <div id="weapon-loader-wrapper"><progress id="weapon-loader" max="100" value="0" style="display: none;"></progress></div>
         <div class="ammo-wrapper"><span id="mag" class="mag"></span>/<span id="reserve" class="reserve"></span></div>
         <dialog id="inventory">
             <div class="inventory-wrapper">
@@ -38,6 +40,12 @@
                     </div>
                 </div>
                 <div id="items-wrapper" class="items-wrapper"></div>
+            </div>
+        </dialog>
+        <dialog id="gameover">
+            <div class="death-wrapper">
+                <div class="you-died">YOU DIED</div>
+                <div id="try-again" class="try-again">TRY AGAIN?</div>
             </div>
         </dialog>
 		<!-- <script type="module" src="./dist/assets/index-82dde868.js"></script> -->

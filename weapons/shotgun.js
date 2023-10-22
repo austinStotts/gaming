@@ -18,11 +18,12 @@ export default class Shotgun {
         // this.inReserve = ammo - magazineSize;
         this.ammo_id = "shotgun_ammo";
         this.reloadTime = 1400; // in milliseconds
-        this.spreadMultiplier = 0.05;
+        this.spreadMultiplier = 0.000000005;
         this.removeAfterMS = 200; // in seconds
         this.projectile_speed = 150; // in milliseconds
         this.swap_time = 800;
-        this.camera_kick = 0.02;
+        this.camera_kick = 0.15;
+        this.number_of_pelets = 8;
     }
 
     reload (player) {
@@ -54,7 +55,7 @@ export default class Shotgun {
         let bodies = [];
         let meshes = [];
 
-        for (let i=0; i<8; i++) {
+        for (let i=0; i<this.number_of_pelets; i++) {
             const geometry = new THREE.SphereGeometry(0.025, 32, 32);
             const material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
             const projectileMesh = new THREE.Mesh(geometry, material);
@@ -64,7 +65,7 @@ export default class Shotgun {
             const projectileBody = new CANNON.Body({ mass, shape: projectileShape });
             projectileBody.collisionFilterGroup = 2;
             projectileBody.collisionFilterMask = -1;
-            projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeafterMS: this.removeAfterMS}
+            projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeAfterMS: this.removeAfterMS}
             
             var vector = new THREE.Vector3();
             vector.setFromMatrixPosition(camera.matrixWorld); // Get the position of the camera in the world
