@@ -1,11 +1,11 @@
 import small_ammo from "../items/small_ammo";
 import shotgun_ammo from "../items/shotgun_ammo";
 
-export default class Pawn {
+export default class Rook {
     constructor(body, mesh) {
-        this.class = "pawn";
-        this.hp = 30;
-        this.damage = 15;
+        this.class = "rook";
+        this.hp = 80;
+        this.damage = 25;
         this.body = body;
         this.mesh = mesh;
         this.drop_table;

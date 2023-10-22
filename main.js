@@ -5,6 +5,7 @@ import makeBody from "./helpers/makeBody.js";
 import show_crosshair from "./crosshair.js";
 import Player from './player.js';
 import Pawn from './enemies/pawn.js';
+import Rook from './enemies/rook.js';
 import Pea_Shooter from './weapons/pea_shooter.js';
 import makeRamp from './helpers/makeRamp.js';
 import makeRoom from './helpers/makeRoom.js';
@@ -469,8 +470,35 @@ let enemyCollision = (event) => {
   }
 }
 
+
 let spawn = () => {
   let x = wave + 1;
+
+  // spawn rooks
+  for(let i = 0; i < Math.floor(wave/10)+1; i++) {
+    let geometry = new THREE.SphereGeometry(3);
+    let material = new THREE.MeshBasicMaterial({ color: 0x005599 });
+    let mesh = new THREE.Mesh(geometry, material);
+
+    let bodyShape = new CANNON.Sphere(3);
+    let body = new CANNON.Body({ shape: bodyShape, mass: 20 });
+    body.collisionFilterGroup = 1;
+    body.collisionFilterMask = -1;
+    body.position.set(get_random(100), 3, get_random(100));
+    body.addEventListener('collide', enemyCollision);
+    body.userData = {physicsMesh: mesh, collisionClass: "rook", id: `${wave}_${i}_rook`}
+
+    mesh.userData.physicsBody = body;
+    mesh.position.copy(body.position)
+
+    scene.add(mesh);
+    world.addBody(body);
+
+
+    enemies[`${wave}_${i}_rook`] = new Rook(body, mesh); 
+  }
+
+  // spawn pawns
   for(let i = 0; i < x; i++) {
     let b = makeBody(2,2,2, 1, 100);
     let c = makeMesh(2,2,2, 0x674EA7, false);
@@ -481,11 +509,12 @@ let spawn = () => {
     b.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
     b.ccdIterations = 100; 
     c.userData.physicsBody = b;
-    b.userData = {physicsMesh: c, collisionClass: "chaseBox", id: `${wave}_${i}`}
+    b.userData = {physicsMesh: c, collisionClass: "pawn", id: `${wave}_${i}_pawn`}
     scene.add(c);
     world.addBody(b);
-    enemies[`${wave}_${i}`] = new Pawn(b, c); 
+    enemies[`${wave}_${i}_pawn`] = new Pawn(b, c); 
   }
+  console.log(enemies)
 }
 
 let removeEnemy = (id) => {
