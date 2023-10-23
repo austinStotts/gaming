@@ -31,7 +31,7 @@ export default (position, options) => {
   // Create walls
   const wallThickness = 0.1;
   const wallGeometry = new THREE.BoxGeometry(wallThickness*2, height, depth);
-  const wallMaterial = new THREE.MeshBasicMaterial({ color, wireframe: true });
+  const wallMaterial = new THREE.MeshBasicMaterial({ color, wireframe: false });
 
 
   if(options.walls.leftwall) {

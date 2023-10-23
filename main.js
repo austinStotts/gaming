@@ -14,6 +14,7 @@ import map_functions from "./map.js";
 
 import small_ammo from './items/small_ammo.js';
 import shotgun_ammo from './items/shotgun_ammo.js'
+import Shotgun from './weapons/shotgun.js';
 
 
 // camera / movement
@@ -98,6 +99,11 @@ let handleDMG = (enemy, player) => {
   updateHP(player)
 }
 
+let getWeapon = (id) => {
+  if(id == "pea_shooter") { return Pea_Shooter }
+  else if(id == "shotgun") { return Shotgun }
+}
+
 let init = () => {
   scene.add(floorMesh);
   world.addBody(floorBody);
@@ -118,28 +124,47 @@ let init = () => {
 document.getElementById("try-again").addEventListener("click", () => { reset() })
 
 let reset = () => {
-  clearEnemies();
-  clearItems();
-
-  let old_player = JSON.parse(window.localStorage.getItem("player_data"));
-  PLAYER.hp = old_player.hp;
-  PLAYER.inventory = old_player.inventory;
-  wave = old_player.wave;
-  PLAYER.weapon = old_player.weapon;
-  PLAYER.secondary = old_player.secondary;
-  PLAYER.body.position.set(0, 2, 0);
-  isAlreadyDead = false;
-  gameover.close();
-  isDeathOpen = false;
-  toggleCursorLock();
-  document.getElementById("grayout").style.display = "none"
-  spawn();
-  updateHP();
-  updateAmmo();
-  // delete all enemies
-  // save inv and stats after each wave
-  // reset all values to pre wave
-  // move player and respawn enemies
+  if(window.localStorage.getItem("player_data") != undefined) {
+    clearEnemies();
+    clearItems();
+    let old_player = JSON.parse(window.localStorage.getItem("player_data"));
+    PLAYER.hp = old_player.hp;
+    PLAYER.inventory = old_player.inventory;
+    wave = old_player.wave;
+    let w = getWeapon(old_player.weapon.id);
+    let s = getWeapon(old_player.secondary.id);
+    PLAYER.weapon = new w(old_player.weapon.inMagazine);
+    PLAYER.secondary = new s(old_player.secondary.inMagazine);
+    PLAYER.body.position.set(0, 2, 0);
+    isAlreadyDead = false;
+    gameover.close();
+    isDeathOpen = false;
+    toggleCursorLock();
+    document.getElementById("grayout").style.display = "none"
+    spawn();
+    updateHP(PLAYER);
+    updateAmmo(PLAYER);
+  } else {
+    console.log("NO PLAYER FOUND");
+    clearEnemies();
+    clearItems();
+    spawn();
+    build_inventory();
+    giveItem(new small_ammo(30));
+    giveItem(new small_ammo(150));
+    PLAYER.hp = 100;
+    PLAYER.weapon = new Pea_Shooter();
+    PLAYER.secondary = new Shotgun();
+    updateAmmo(PLAYER);
+    updateHP(PLAYER);
+    update_inv_ui();
+    PLAYER.body.position.set(0, 2, 0);
+    isAlreadyDead = false;
+    gameover.close();
+    isDeathOpen = false;
+    toggleCursorLock();
+    document.getElementById("grayout").style.display = "none"
+  }
 }
 
 
@@ -238,7 +263,7 @@ let get_random = (n) => {
 //`./item_images/${PLAYER.inventory[i].item_img}`;
 let updateInventory = () => {
   let inv = document.getElementById("items-wrapper");
-  console.log(inv.childNodes)
+  // console.log(inv.childNodes)
   inv.childNodes.forEach((cell,i) => {
     if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
 
@@ -259,7 +284,7 @@ let updateInventory = () => {
       cell.childNodes[0].src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`
     } else {
       if(cell.childNodes.length>0) {
-        console.log("REMOVING", i)
+        // console.log("REMOVING", i)
         // for(let i = 0; i < cell.childNodes.length; i++) { cell.removeChild(cell.childNodes[i]) }
         cell.removeChild(cell.childNodes[1])
         cell.removeChild(cell.childNodes[0])
@@ -292,7 +317,7 @@ let toggleCursorLock = () => {
   } else {
     // canvas.exitPointerLock = canvas.exitPointerLock || canvas.mozExitPointerLock || canvas.webkitExitPointerLock;
     document.exitPointerLock();
-    console.log("EXIT POINTER LOCK")
+    // console.log("EXIT POINTER LOCK")
   }
 }
 
@@ -338,7 +363,7 @@ let inv_end;
 let inv_drop = (event, id) => {
   inv_end = id;
   [PLAYER.inventory[inv_start], PLAYER.inventory[inv_end]] = [PLAYER.inventory[inv_end], PLAYER.inventory[inv_start]];
-  console.log(PLAYER.inventory)
+  // console.log(PLAYER.inventory)
   updateInventory();
 }
 let inv_pickup = (event, id) => {
@@ -514,7 +539,7 @@ let spawn = () => {
     world.addBody(b);
     enemies[`${wave}_${i}_pawn`] = new Pawn(b, c); 
   }
-  console.log(enemies)
+  // console.log(enemies)
 }
 
 let removeEnemy = (id) => {
@@ -579,11 +604,18 @@ let onKeyDown = (event) => {
     case "i":
       toggle_inventory();
       break
+    case "1":
+      swap_weapons();
+      break
     case "2":
       swap_weapons();
       break
     case "k":
       clearEnemies();
+      break
+    case "l":
+      PLAYER.take_damage(75);
+      updateHP(PLAYER);
       break
   }
 }
@@ -652,8 +684,27 @@ let isReloading = false;
 let reload = (player) => {
   if(!isReloading) {
     isReloading = true;
-    setTimeout(() => {player.weapon.reload(player); isReloading=false; updateAmmo(PLAYER)}, player.weapon.reloadTime);
+    setTimeout(() => {PLAYER.weapon.reload(player); isReloading=false; updateAmmo(PLAYER)}, player.weapon.reloadTime);
+    animateReload();
   } else {}
+}
+
+let animateReload = () => {
+  let start = Date.now();
+  let time = PLAYER.weapon.reloadTime;
+  let progress = document.getElementById("reload-loader");
+  progress.style.display = "block";
+  let id = setInterval(() => {
+    // console.log(progress.value)
+    if(Date.now() >= start + time) {
+      progress.value = 0;
+      progress.style.display = "none";
+      clearInterval(id)
+    } else {
+      progress.value += 1;
+    }
+    
+  },time/100)
 }
 
 let isSwappingWeapons = false;
@@ -674,7 +725,7 @@ let animateSwap = () => {
   let progress = document.getElementById("weapon-loader");
   progress.style.display = "block";
   let id = setInterval(() => {
-    console.log(progress.value)
+    // console.log(progress.value)
     if(Date.now() >= start + time) {
       progress.value = 0;
       progress.style.display = "none";
@@ -748,7 +799,7 @@ canvas.onclick = (e) => {
 let removeProjectile = (projectile) => {
   let deleteAt = projectile.createdAt + projectile.removeAfterMS;
   if(deleteAt < Date.now()) { 
-    console.log(projectiles)
+    // console.log(projectiles)
     world.remove(projectile.body);
     scene.remove(projectile.mesh);
     return true
@@ -826,7 +877,7 @@ canvas.addEventListener('mouseup', () => {
 
 
 let removeBodies = (body, i) => {
-  console.log(enemies)
+  // console.log(enemies)
   if(body) { 
     world.remove(body)
     bodiesToRemove.splice(i, 1);

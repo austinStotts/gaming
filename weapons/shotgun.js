@@ -10,13 +10,14 @@ let get_random = (n) => {
 }
 
 export default class Shotgun {
-    constructor() {
+    constructor(inMagazine=0) {
         this.display_name = "Shotgun"
         this.projectileDMG = 4;
         this.magazineSize = 8;
-        this.inMagazine = 0;
+        this.inMagazine = inMagazine;
         // this.inReserve = ammo - magazineSize;
         this.ammo_id = "shotgun_ammo";
+        this.id = "shotgun";
         this.reloadTime = 1400; // in milliseconds
         this.spreadMultiplier = 0.000000005;
         this.removeAfterMS = 200; // in seconds

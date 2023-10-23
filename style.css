@@ -279,3 +279,38 @@
 #weapon-loader::-webkit-progress-bar {
     background-color: transparent;
 }
+
+.reload-loader-wrapper {
+    position: fixed;
+    top: calc(50% + 25px);
+    left: 50%;
+    z-index: 100;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.reload-loader {
+    width: 100px;
+    height: 7px;
+    /* box-shadow: 1px 1px 4px rgba( 0, 0, 0, 0.2 ); */
+    color: red;
+    border-radius: 3.5px;
+}
+
+#reload-loader::-moz-progress-bar {
+    color: red;
+    background-color: red;
+    border-radius: 20px;
+}
+
+#reload-loader::-webkit-progress-value {
+    accent-color: green;
+    color: red;
+    background-color: rgb(133, 133, 255);
+    border-radius: 3.5px;
+    /* background-color: transparent; */
+}
+
+#reload-loader::-webkit-progress-bar {
+    background-color: transparent;
+}

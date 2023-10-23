@@ -2,11 +2,12 @@ import * as THREE from 'three';
 import * as CANNON from "cannon";
 
 export default class Pea_Shooter {
-    constructor() {
+    constructor(inMagazine=0) {
         this.display_name = "Pea Shooter"
+        this.id = "pea_shooter";
         this.projectileDMG = 5;
         this.magazineSize = 30;
-        this.inMagazine = 0;
+        this.inMagazine = inMagazine;
         // this.inReserve = 0;
         this.ammo_id = 'small_ammo';
         this.reloadTime = 800; // in milliseconds
