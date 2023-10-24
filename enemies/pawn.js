@@ -9,6 +9,7 @@ export default class Pawn {
         this.body = body;
         this.mesh = mesh;
         this.drop_table;
+        this.moveSpeed = 6;
 
         this.buildDropTable()
     }

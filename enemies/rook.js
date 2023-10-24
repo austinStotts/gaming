@@ -9,6 +9,7 @@ export default class Rook {
         this.body = body;
         this.mesh = mesh;
         this.drop_table;
+        this.moveSpeed = 8;
 
         this.buildDropTable()
     }

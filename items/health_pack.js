@@ -20,17 +20,24 @@ let make_mesh = (img) => {
     return mesh;
 }
 
-export default class small_ammo {
+export default class health_pack {
     constructor (count) {
         this.count = count;
-        this.id = "small_ammo";
-        this.name = "Small Ammo"
-        this.isStack = true;
-        this.img = "small_ammo.jpg";
-        this.rarity = "white"
+        this.name = "Health Pack";
+        this.id = "health_pack";
+        this.isStack = false;
+        this.isConsumable = true;
+        this.img = "health_pack.jpg";
+        this.rarity = "white";
         this.toBeDeleted = false;
         this.mesh = make_mesh(this.img);
         this.body = new CANNON.Body({ shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)), mass: 10, linearDamping: 0.5, collisionFilterGroup: 3, collisionFilterMask: -1 });
         this.body.userData = { collisionClass: 'item', hasBeenCollected: false }
+    }
+
+    use (player) {
+        player.hp += 25;
+        if(player.hp > 100) { player.hp = 100 }
+        return true;
     }
 }

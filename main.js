@@ -12,6 +12,7 @@ import makeRoom from './helpers/makeRoom.js';
 
 import map_functions from "./map.js";
 
+import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
 import shotgun_ammo from './items/shotgun_ammo.js'
 import Shotgun from './weapons/shotgun.js';
@@ -94,6 +95,11 @@ let updateHP = (player) => {
   hp.value = player.hp;
 }
 
+let updateWave = () => {
+  let w = document.getElementById("wave");
+  w.textContent = wave;
+}
+
 let handleDMG = (enemy, player) => {
   player.take_damage(enemy.damage);
   updateHP(player)
@@ -119,6 +125,7 @@ let init = () => {
   updateAmmo(PLAYER);
   updateHP(PLAYER);
   update_inv_ui();
+  updateWave();
 }
 
 document.getElementById("try-again").addEventListener("click", () => { reset() })
@@ -144,6 +151,7 @@ let reset = () => {
     spawn();
     updateHP(PLAYER);
     updateAmmo(PLAYER);
+    updateWave();
   } else {
     console.log("NO PLAYER FOUND");
     clearEnemies();
@@ -163,7 +171,8 @@ let reset = () => {
     gameover.close();
     isDeathOpen = false;
     toggleCursorLock();
-    document.getElementById("grayout").style.display = "none"
+    document.getElementById("grayout").style.display = "none";
+    updateWave();
   }
 }
 
@@ -321,6 +330,21 @@ let toggleCursorLock = () => {
   }
 }
 
+let item_log = [];
+let showItemPickup = (item) => {
+  let log = document.getElementById("item-pickup-log");
+  let listItem = document.createElement("li");
+  listItem.textContent = item.name;
+  listItem.classList.add("item-pickup-label", item.rarity);
+  let id = `item-pickup-log-${Date.now()}`;
+  listItem.id = id;
+  log.appendChild(listItem);
+
+  setTimeout(() => {
+    log.removeChild(listItem);
+  },5000)
+}
+
 
 let giveItem = (item) => {
   if(item.isStack) {
@@ -329,6 +353,7 @@ let giveItem = (item) => {
       if(!didGive && PLAYER.inventory[i] != undefined) {
         if(item.id == PLAYER.inventory[i].id) {
           PLAYER.inventory[i].count += item.count;
+          showItemPickup(item);
           updateAmmo(PLAYER);
           didGive = true;
           break
@@ -339,6 +364,7 @@ let giveItem = (item) => {
       for(let i = 0; i < PLAYER.inventory.length; i++) {
         if(PLAYER.inventory[i] == undefined) {
           PLAYER.inventory[i] = item;
+          showItemPickup(item);
           updateAmmo(PLAYER);
           break
         }
@@ -349,6 +375,8 @@ let giveItem = (item) => {
     for(let i = 0; i < PLAYER.inventory.length; i++) {
       if(PLAYER.inventory[i] == undefined) {
         PLAYER.inventory[i] = item;
+        showItemPickup(item);
+        didGive = true;
         break
       }
     }
@@ -370,6 +398,16 @@ let inv_pickup = (event, id) => {
   inv_start = id;
 }
 
+let useItem = (e, i) => {
+  let item = PLAYER.inventory[i];
+  if(item.isConsumable) {
+    item.use(PLAYER);
+    PLAYER.inventory.splice(i,1,undefined);
+    updateInventory();
+    updateHP(PLAYER);
+    updateAmmo(PLAYER);
+  } else { console.log("item is not consumable") }
+}
 
 let build_inventory = () => {
   
@@ -378,15 +416,19 @@ let build_inventory = () => {
   inventory.forEach((item, i) => {
     let div = document.createElement("div");
     div.classList.add("inventory-cell", `cellid-${i}`);
-    div.onmouseup = (e) => {inv_drop(e, i)};
-    div.onmousedown = (e) => {inv_pickup(e, i)};
+    div.onmouseup = (e) => { inv_drop(e, i) };
+    div.onmousedown = (e) => { inv_pickup(e, i) };
+    div.ondblclick = (e) => { useItem(e, i) };
     element.appendChild(div);
   })
   PLAYER.inventory = inventory;
 }
 
 let test_ammo = new shotgun_ammo(30);
-
+let test_pack = new Health_pack(1);
+let test_pack1 = new Health_pack(1);
+let test_pack12 = new Health_pack(1);
+let test_pack123 = new Health_pack(1);
 
 let dropItem = (item, position) => {
   item.body.position.set(position.x, position.y, position.z)
@@ -402,7 +444,11 @@ let dropItem = (item, position) => {
   scene.add(item.mesh);
 }
 
-dropItem(test_ammo, new CANNON.Vec3(0,1,-30))
+dropItem(test_ammo, new CANNON.Vec3(2,1,-30))
+dropItem(test_pack, new CANNON.Vec3(-2,1,-30))
+dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
+dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
+dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
 
 
 
@@ -548,12 +594,12 @@ let removeEnemy = (id) => {
   delete enemies[id];
 }
 
-let move_towards_player = (mesh, body) => {
+let move_towards_player = (mesh, body, speed) => {
   let direction = new THREE.Vector3();
   camera.getWorldPosition(direction);
   direction.sub(mesh.position);
 
-  const speed = 6; // Adjust this value to control the speed
+  // const speed = 6; // Adjust this value to control the speed
   const velocity = direction.clone().normalize().multiplyScalar(speed);
   
   // Apply the velocity to the Cannon.js body
@@ -919,7 +965,7 @@ let clearEnemies = () => {
 // update every frame
 let updateEnemyPhysics = () => {
   Object.keys(enemies).forEach((key) => {
-    move_towards_player(enemies[key].mesh, enemies[key].body)
+    move_towards_player(enemies[key].mesh, enemies[key].body, enemies[key].moveSpeed)
     enemies[key].mesh.position.copy(enemies[key].body.position);
     enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
   })
@@ -927,6 +973,7 @@ let updateEnemyPhysics = () => {
   if(Object.keys(enemies).length < 1) {
     wave += 1;
     saveWave();
+    updateWave();
     spawn();
   }
 }
@@ -958,7 +1005,7 @@ let updateGame = () => {
   playerMesh.quaternion.copy(PLAYER.body.quaternion);
 
   camera.position.copy(PLAYER.body.position);
-  camera.position.y += 2.5;
+  camera.position.y += 2.5 ;
 }
 
 

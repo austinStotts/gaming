@@ -20,10 +20,12 @@ let make_mesh = (img) => {
     return mesh;
 }
 
-export default class small_ammo {
+export default class shotgun_ammo {
     constructor (count) {
         this.count = count;
+        this.name = "Shotgun Ammo"
         this.id = "shotgun_ammo";
+        this.rarity = "white"
         this.isStack = true;
         this.img = "shotgun_ammo.jpg";
         this.toBeDeleted = false;
