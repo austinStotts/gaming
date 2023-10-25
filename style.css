@@ -371,3 +371,14 @@
         0 0 151px #fff; */
 }
 
+.tooltip {
+    position: relative;
+    right: -48px;
+    top: -70px;
+    width: 100px;
+    background-color: black;
+    color: white;
+    font-family: monospace;
+    padding: 5px;
+    z-index: 1001;
+}

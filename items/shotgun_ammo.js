@@ -33,6 +33,8 @@ export default class shotgun_ammo {
         this.body = new CANNON.Body({ shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)), mass: 10, linearDamping: 0.5, collisionFilterGroup: 3, collisionFilterMask: -1 });
         this.body.userData = { collisionClass: 'item', hasBeenCollected: false }
 
+        this.text = `${count} shotgun shells`
+
 
         
  

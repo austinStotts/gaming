@@ -33,6 +33,7 @@ export default class health_pack {
         this.mesh = make_mesh(this.img);
         this.body = new CANNON.Body({ shape: new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 0.5)), mass: 10, linearDamping: 0.5, collisionFilterGroup: 3, collisionFilterMask: -1 });
         this.body.userData = { collisionClass: 'item', hasBeenCollected: false }
+        this.text = "heals the player for 25HP"
     }
 
     use (player) {

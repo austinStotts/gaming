@@ -11,6 +11,7 @@ import makeRamp from './helpers/makeRamp.js';
 import makeRoom from './helpers/makeRoom.js';
 
 import map_functions from "./map.js";
+import waves from "./waves.js";
 
 import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
@@ -34,7 +35,7 @@ let bodiesToRemove = [];
 let meshToRemove = [];
 let enemies = {}
 let wave = 1;
-let waves = [];
+// let waves = [];
 
 let active_items = [];
 let itemsToRemove = [];
@@ -234,7 +235,7 @@ floorBody.collisionFilterMask = -1;
 let create_player_body = (player) => {
   let shape = new CANNON.Box(new CANNON.Vec3(1,2,1));
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
-  playerBody.position.set(0,2,0);
+  playerBody.position.set(0,14,0);
   playerBody.collisionFilterGroup = 1;
   playerBody.collisionFilterMask = 1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
@@ -281,12 +282,23 @@ let updateInventory = () => {
       img.classList.add("item");
       img.ondragstart = () => false;
 
+
       let counter = document.createElement("div");
       counter.classList.add("counter");
       counter.textContent = PLAYER.inventory[i].count;
 
+      let tooltip = document.createElement("div");
+      tooltip.hidden = true;
+      tooltip.textContent = PLAYER.inventory[i].text;
+      tooltip.id = `tooltip-${i}`;
+      tooltip.classList.add("tooltip");
+
       cell.appendChild(img);
       cell.appendChild(counter);
+      cell.appendChild(tooltip);
+
+      cell.onmouseover = (e) => { console.log("MOUSE OVER ", i); document.getElementById(`tooltip-${i}`).hidden=false; }
+      cell.onmouseleave = (e) => { document.getElementById(`tooltip-${i}`).hidden=true; }
 
     } else if (PLAYER.inventory[i] != undefined && cell.childNodes.length>1) {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
@@ -295,6 +307,7 @@ let updateInventory = () => {
       if(cell.childNodes.length>0) {
         // console.log("REMOVING", i)
         // for(let i = 0; i < cell.childNodes.length; i++) { cell.removeChild(cell.childNodes[i]) }
+        cell.removeChild(cell.childNodes[2])
         cell.removeChild(cell.childNodes[1])
         cell.removeChild(cell.childNodes[0])
       }
@@ -444,11 +457,11 @@ let dropItem = (item, position) => {
   scene.add(item.mesh);
 }
 
-dropItem(test_ammo, new CANNON.Vec3(2,1,-30))
-dropItem(test_pack, new CANNON.Vec3(-2,1,-30))
-dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
-dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
-dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
+dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
+dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
+// dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
+// dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
+// dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
 
 
 
@@ -542,51 +555,80 @@ let enemyCollision = (event) => {
 }
 
 
+// let spawn = () => {
+//   let x = wave + 1;
+
+//   // spawn rooks
+//   for(let i = 0; i < Math.floor(wave/10)+1; i++) {
+//     let geometry = new THREE.SphereGeometry(3);
+//     let material = new THREE.MeshBasicMaterial({ color: 0x005599 });
+//     let mesh = new THREE.Mesh(geometry, material);
+
+//     let bodyShape = new CANNON.Sphere(3);
+//     let body = new CANNON.Body({ shape: bodyShape, mass: 20 });
+//     body.collisionFilterGroup = 1;
+//     body.collisionFilterMask = -1;
+//     body.position.set(get_random(100), 3, get_random(100));
+//     body.addEventListener('collide', enemyCollision);
+//     body.userData = {physicsMesh: mesh, collisionClass: "rook", id: `${wave}_${i}_rook`}
+
+//     mesh.userData.physicsBody = body;
+//     mesh.position.copy(body.position)
+
+//     scene.add(mesh);
+//     world.addBody(body);
+
+
+//     enemies[`${wave}_${i}_rook`] = new Rook(body, mesh); 
+//   }
+
+//   // spawn pawns
+//   for(let i = 0; i < x; i++) {
+//     let b = makeBody(2,2,2, 1, 100);
+//     let c = makeMesh(2,2,2, 0x674EA7, false);
+//     b.addEventListener('collide', enemyCollision) ;
+//     // b.fixedRotation = true;
+//     b.collisionFilterGroup = 1;
+//     b.collisionFilterMask = -1;
+//     b.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
+//     b.ccdIterations = 100; 
+//     c.userData.physicsBody = b;
+//     b.userData = {physicsMesh: c, collisionClass: "pawn", id: `${wave}_${i}_pawn`}
+//     scene.add(c);
+//     world.addBody(b);
+//     enemies[`${wave}_${i}_pawn`] = new Pawn(b, c); 
+//   }
+//   // console.log(enemies)
+// }
+
+
+
+// __ __ __ __ __ __ __ __ __
+// NEW SPAWN FUNCTION
+
+let hasSpawned = false;
 let spawn = () => {
-  let x = wave + 1;
+  let thisWave = waves[wave];
+  
+  if(thisWave) {
+    for(let i = 0; i < thisWave.enemies.length; i++) {
+      console.log(thisWave.enemies[i]);
+      let mesh = thisWave.enemies[i].mesh;
+      let body = thisWave.enemies[i].body;
 
-  // spawn rooks
-  for(let i = 0; i < Math.floor(wave/10)+1; i++) {
-    let geometry = new THREE.SphereGeometry(3);
-    let material = new THREE.MeshBasicMaterial({ color: 0x005599 });
-    let mesh = new THREE.Mesh(geometry, material);
+      body.addEventListener('collide', enemyCollision);
 
-    let bodyShape = new CANNON.Sphere(3);
-    let body = new CANNON.Body({ shape: bodyShape, mass: 20 });
-    body.collisionFilterGroup = 1;
-    body.collisionFilterMask = -1;
-    body.position.set(get_random(100), 3, get_random(100));
-    body.addEventListener('collide', enemyCollision);
-    body.userData = {physicsMesh: mesh, collisionClass: "rook", id: `${wave}_${i}_rook`}
+      scene.add(mesh);
+      world.addBody(body);
 
-    mesh.userData.physicsBody = body;
-    mesh.position.copy(body.position)
-
-    scene.add(mesh);
-    world.addBody(body);
-
-
-    enemies[`${wave}_${i}_rook`] = new Rook(body, mesh); 
+      body.userData.id = `${wave}_${i}_${thisWave.enemies[i].class}`
+      enemies[`${wave}_${i}_${thisWave.enemies[i].class}`] = thisWave.enemies[i];
+    }
+    hasSpawned = true;
   }
-
-  // spawn pawns
-  for(let i = 0; i < x; i++) {
-    let b = makeBody(2,2,2, 1, 100);
-    let c = makeMesh(2,2,2, 0x674EA7, false);
-    b.addEventListener('collide', enemyCollision) ;
-    // b.fixedRotation = true;
-    b.collisionFilterGroup = 1;
-    b.collisionFilterMask = -1;
-    b.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
-    b.ccdIterations = 100; 
-    c.userData.physicsBody = b;
-    b.userData = {physicsMesh: c, collisionClass: "pawn", id: `${wave}_${i}_pawn`}
-    scene.add(c);
-    world.addBody(b);
-    enemies[`${wave}_${i}_pawn`] = new Pawn(b, c); 
-  }
-  // console.log(enemies)
 }
+
+
 
 let removeEnemy = (id) => {
   bodiesToRemove.push(enemies[id].body);
@@ -663,6 +705,9 @@ let onKeyDown = (event) => {
       PLAYER.take_damage(75);
       updateHP(PLAYER);
       break
+    case "p":
+      printPlayerPosition();
+      break
   }
 }
 
@@ -705,7 +750,13 @@ let playerInputs = () => {
   }
 }
 
-
+let printPlayerPosition = () => {
+  console.log("\nplayer's current location:");
+  console.log(`x: ${PLAYER.body.position.x}`);
+  console.log(`y: ${PLAYER.body.position.y}`);
+  console.log(`z: ${PLAYER.body.position.z}`);
+  console.log("-- -- -- -- -- -- --\n")
+}
 
 
 
@@ -970,8 +1021,9 @@ let updateEnemyPhysics = () => {
     enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
   })
 
-  if(Object.keys(enemies).length < 1) {
+  if(Object.keys(enemies).length < 1 && hasSpawned) {
     wave += 1;
+    hasSpawned = false;
     saveWave();
     updateWave();
     spawn();
@@ -1005,7 +1057,7 @@ let updateGame = () => {
   playerMesh.quaternion.copy(PLAYER.body.quaternion);
 
   camera.position.copy(PLAYER.body.position);
-  camera.position.y += 2.5 ;
+  camera.position.y += 2.5 //+ 40;
 }
 
 

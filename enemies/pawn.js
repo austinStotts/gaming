@@ -1,13 +1,34 @@
+import * as THREE from 'three';
+import * as CANNON from "cannon";
+
 import small_ammo from "../items/small_ammo";
 import shotgun_ammo from "../items/shotgun_ammo";
 
+let makePawn = (l) => {
+    let geometry = new THREE.BoxGeometry(2, 2, 2);
+    let material = new THREE.MeshBasicMaterial({ color: 0x674EA7, wireframe: false, transparent: false });
+    let mesh = new THREE.Mesh(geometry, material);
+
+    let shape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
+    let body = new CANNON.Body({ shape, mass: 1, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01 });
+
+    body.collisionFilterGroup = 1;
+    body.collisionFilterMask = -1; 
+    body.userData = {physicsMesh: mesh, collisionClass: "pawn"};
+    mesh.userData.physicsBody = body;
+
+    body.position.set(l.x, l.y, l.z);
+    mesh.position.copy(body.position);
+
+    return [mesh, body];
+}
+
 export default class Pawn {
-    constructor(body, mesh) {
+    constructor(location={x:0,y:0,z:0}) {
         this.class = "pawn";
         this.hp = 30;
         this.damage = 15;
-        this.body = body;
-        this.mesh = mesh;
+        [this.mesh, this.body] = makePawn(location);
         this.drop_table;
         this.moveSpeed = 6;
 
