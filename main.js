@@ -16,6 +16,8 @@ import waves from "./waves.js";
 import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
 import shotgun_ammo from './items/shotgun_ammo.js'
+import energy_ammo from './items/energy_ammo.js';
+import Pulse_Bomb from './weapons/pulse_bomb.js';
 import Shotgun from './weapons/shotgun.js';
 
 
@@ -115,8 +117,8 @@ let init = () => {
   scene.add(floorMesh);
   world.addBody(floorBody);
   // scene.add(zero)
-  scene.add(xLine)
-  scene.add(yLine)
+  // scene.add(xLine)
+  // scene.add(yLine)
   create_player_body(PLAYER)
 
   spawn();
@@ -252,11 +254,11 @@ let playerCollision = (event) => {
 // let zero = makeMesh(1,50, 1, 0x53D996);
 // zero.position.set(0,0,0)
 
-let xLine = makeMesh(500, 0.2, 1, 0x700050);
-xLine.position.set(0,0,0);
+// let xLine = makeMesh(500, 0.2, 1, 0x700050);
+// xLine.position.set(0,0,0);
 
-let yLine = makeMesh(1, 0.2, 500, 0x910000);
-yLine.position.set(0,0,0);
+// let yLine = makeMesh(1, 0.2, 500, 0x910000);
+// yLine.position.set(0,0,0);
 
 
 let get_random = (n) => {
@@ -443,6 +445,8 @@ let test_pack1 = new Health_pack(1);
 let test_pack12 = new Health_pack(1);
 let test_pack123 = new Health_pack(1);
 
+let test_energy = new energy_ammo(20);
+
 let dropItem = (item, position) => {
   item.body.position.set(position.x, position.y, position.z)
   item.body.addEventListener('collide', (event) => {
@@ -459,6 +463,7 @@ let dropItem = (item, position) => {
 
 dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
 dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
+dropItem(test_energy, new CANNON.Vec3(0,13,-28))
 // dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
 // dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
 // dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
@@ -924,7 +929,8 @@ function createProjectile(player) {
         mesh: p.mesh[i],
         body: p.body[i],
         removeAfterMS: p.body[i].userData.removeAfterMS,
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        rules: p.rules ? p.rules : undefined
       });
     }
 
@@ -935,6 +941,15 @@ let update_projectiles = () => {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const projectile = projectiles[i];
     projectile.mesh.position.copy(projectile.body.position);
+    if(projectile.rules) {
+      if(projectile.rules.deltaSize) {
+        projectile.mesh.scale.add(new THREE.Vector3(projectile.rules.deltaSize,projectile.rules.deltaSize,projectile.rules.deltaSize));
+      }
+      if(projectile.rules.deltaSpeed) {
+        projectile.body.velocity.scale(projectile.rules.deltaSpeed);
+        console.log(projectile.body)
+      }
+    }
     if(removeProjectile(projectile)) { projectiles.splice(i, 1) } ;
   }
 }
