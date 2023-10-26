@@ -1,5 +1,7 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
+import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import makeMesh from "./helpers/makeMesh.js";
 import makeBody from "./helpers/makeBody.js";
 import show_crosshair from "./crosshair.js";
@@ -89,6 +91,41 @@ let updateAmmo = (player) => {
 let update_inv_ui = () => {
   let w1_label = document.getElementById("weapon-one-label");
   w1_label.textContent = PLAYER.weapon.display_name
+  let w1_model = document.getElementById("weapon-one-model");
+  
+  const w1_scene = new THREE.Scene();
+  const w1_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
+  // w1_camera.position.set(2,5,0); 
+  const w1_renderer = new THREE.WebGLRenderer();
+  w1_renderer.setSize(160, 30);
+  w1_model.appendChild(w1_renderer.domElement);
+  w1_renderer.domElement.id = "w1_canvas"
+
+  // let textGeometry;
+
+
+  const textGeometry = new TextGeometry(PLAYER.weapon.display_name);
+
+
+  const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+
+  const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+  textMesh.position.set(0,0,2);
+  textMesh.rotation.x = -Math.PI / 2;
+  w1_scene.add(textMesh);
+
+  w1_camera.position.z = 0;
+  w1_camera.lookAt(0,0,2)
+
+  function w1_animate() {
+    requestAnimationFrame(w1_animate);
+    textMesh.rotation.x += 0.01;
+    textMesh.rotation.y += 0.01;
+    w1_renderer.render(w1_scene, w1_camera);
+  }
+
+  w1_animate();
+
   let w2_label = document.getElementById("weapon-two-label");
   w2_label.textContent = PLAYER.secondary.display_name
 }
@@ -125,6 +162,7 @@ let init = () => {
   build_inventory();
   giveItem(new small_ammo(30));
   giveItem(new small_ammo(150));
+  giveItem(new energy_ammo(150));
   updateAmmo(PLAYER);
   updateHP(PLAYER);
   update_inv_ui();
@@ -163,6 +201,7 @@ let reset = () => {
     build_inventory();
     giveItem(new small_ammo(30));
     giveItem(new small_ammo(150));
+    giveItem(new energy_ammo(150));
     PLAYER.hp = 100;
     PLAYER.weapon = new Pea_Shooter();
     PLAYER.secondary = new Shotgun();
@@ -224,10 +263,12 @@ const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: 
 const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
 floorMesh.position.set(0,0,0);
+
 const floorShape = new CANNON.Plane();
 let floorBody = new CANNON.Body({ mass: 0, shape: floorShape });
 floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
+floorMesh.userData.physicsBody = floorBody;
 // console.log(floorBody);
 floorBody.collisionFilterGroup = 1;
 floorBody.collisionFilterMask = -1;
@@ -539,6 +580,13 @@ let handleDrops = (enemy) => {
   }
 }
 
+let damageEnemy = (enemy, damage) => {
+  if(enemy.update_hp(damage)) {
+    handleDrops(enemies[enemy.body.userData.id])
+    removeEnemy(enemy.body.userData.id);
+  }
+}
+
 let enemyCollision = (event) => {
   if(event.body.userData.collisionClass == "userProjectile" || event.target.userData.collisionClass == "userProjectile") {
     let id = event.target.userData.id;
@@ -558,53 +606,6 @@ let enemyCollision = (event) => {
     
   }
 }
-
-
-// let spawn = () => {
-//   let x = wave + 1;
-
-//   // spawn rooks
-//   for(let i = 0; i < Math.floor(wave/10)+1; i++) {
-//     let geometry = new THREE.SphereGeometry(3);
-//     let material = new THREE.MeshBasicMaterial({ color: 0x005599 });
-//     let mesh = new THREE.Mesh(geometry, material);
-
-//     let bodyShape = new CANNON.Sphere(3);
-//     let body = new CANNON.Body({ shape: bodyShape, mass: 20 });
-//     body.collisionFilterGroup = 1;
-//     body.collisionFilterMask = -1;
-//     body.position.set(get_random(100), 3, get_random(100));
-//     body.addEventListener('collide', enemyCollision);
-//     body.userData = {physicsMesh: mesh, collisionClass: "rook", id: `${wave}_${i}_rook`}
-
-//     mesh.userData.physicsBody = body;
-//     mesh.position.copy(body.position)
-
-//     scene.add(mesh);
-//     world.addBody(body);
-
-
-//     enemies[`${wave}_${i}_rook`] = new Rook(body, mesh); 
-//   }
-
-//   // spawn pawns
-//   for(let i = 0; i < x; i++) {
-//     let b = makeBody(2,2,2, 1, 100);
-//     let c = makeMesh(2,2,2, 0x674EA7, false);
-//     b.addEventListener('collide', enemyCollision) ;
-//     // b.fixedRotation = true;
-//     b.collisionFilterGroup = 1;
-//     b.collisionFilterMask = -1;
-//     b.ccdSpeedThreshold = 10;  // Adjust the threshold as needed
-//     b.ccdIterations = 100; 
-//     c.userData.physicsBody = b;
-//     b.userData = {physicsMesh: c, collisionClass: "pawn", id: `${wave}_${i}_pawn`}
-//     scene.add(c);
-//     world.addBody(b);
-//     enemies[`${wave}_${i}_pawn`] = new Pawn(b, c); 
-//   }
-//   // console.log(enemies)
-// }
 
 
 
@@ -647,7 +648,7 @@ let move_towards_player = (mesh, body, speed) => {
   direction.sub(mesh.position);
 
   // const speed = 6; // Adjust this value to control the speed
-  const velocity = direction.clone().normalize().multiplyScalar(speed);
+  const velocity = direction.clone().normalize().multiplyScalar(speed); // CHANGE TO 'SPEED'
   
   // Apply the velocity to the Cannon.js body
   body.velocity.set(velocity.x, -1, velocity.z);
@@ -914,26 +915,29 @@ function createProjectile(player) {
   if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons && !isAlreadyDead) {
     player.weapon.removeAmmo(player);
     updateAmmo(player);
-    let p = player.weapon.createProjectile(camera);
-
     // CAMERA KICK WIP - - - - 
     var rotationMatrix = new THREE.Matrix4();
     rotationMatrix.makeRotationAxis(new THREE.Vector3(1, 0, 0), player.weapon.camera_kick);
     camera.applyMatrix4(rotationMatrix);
     cameraRotation.x += player.weapon.camera_kick;
-
-    for(let i = 0; i < p.body.length; i++) {
-      scene.add(p.mesh[i]);
-      world.addBody(p.body[i]);
-      projectiles.push({
-        mesh: p.mesh[i],
-        body: p.body[i],
-        removeAfterMS: p.body[i].userData.removeAfterMS,
-        createdAt: Date.now(),
-        rules: p.rules ? p.rules : undefined
-      });
+    if(player.weapon.isHitScan) {
+      // console.log("HITSCAN!");
+      player.weapon.createProjectile(camera, world, scene, enemies, damageEnemy)
+    } else {
+      let p = player.weapon.createProjectile(camera);
+      for(let i = 0; i < p.body.length; i++) {
+        scene.add(p.mesh[i]);
+        world.addBody(p.body[i]);
+        projectiles.push({
+          mesh: p.mesh[i],
+          body: p.body[i],
+          removeAfterMS: p.body[i].userData.removeAfterMS,
+          createdAt: Date.now(),
+          rules: p.rules ? p.rules : undefined,
+          callback: p.callback ? p.callback : undefined
+        });
+      }
     }
-
   }
 }
 
@@ -942,16 +946,29 @@ let update_projectiles = () => {
     const projectile = projectiles[i];
     projectile.mesh.position.copy(projectile.body.position);
     if(projectile.rules) {
-      if(projectile.rules.deltaSize) {
+      if(projectile.rules.deltaSize) { // if given, change size of projectile every frame
         projectile.mesh.scale.add(new THREE.Vector3(projectile.rules.deltaSize,projectile.rules.deltaSize,projectile.rules.deltaSize));
+        projectile.body.shapes[0] = new CANNON.Sphere(projectile.body.shapes[0].radius + (projectile.rules.deltaSize / 2));
+        projectile.body.mass = projectile.body.mass + 0.6;
+        // logProperties(projectile.body)
       }
-      if(projectile.rules.deltaSpeed) {
-        projectile.body.velocity.scale(projectile.rules.deltaSpeed);
-        console.log(projectile.body)
+      if(projectile.rules.deltaSpeed) {// if given, change speed of projectile every frame
+        projectile.body.velocity.mult(projectile.rules.deltaSpeed, projectile.body.velocity);
       }
     }
-    if(removeProjectile(projectile)) { projectiles.splice(i, 1) } ;
+    
+    if(removeProjectile(projectile)) { // do after projectile is to be removed
+      if(projectile.callback) { projectile.callback(projectile.mesh, projectile.body, enemies, world ,damageEnemy); console.log(enemies) }
+      projectiles.splice(i, 1)
+    } ;
   }
+}
+
+let logProperties = (object) => {
+  console.log("\n-- -- -- -- -- -- -- --\nobject data");
+  console.log(`object mass: ${object.mass}`);
+  console.log(`shape size: ${object.shapes[0].radius}`);
+  console.log(`object velocities: x-${object.velocity.x} y-${object.velocity.y} z-${object.velocity.z}`)
 }
 
 document.addEventListener('click', () => {createProjectile(PLAYER)});

@@ -15,7 +15,7 @@ let makeRook = (l) => {
 
     body.collisionFilterGroup = 1;
     body.collisionFilterMask = -1;
-    body.userData = {physicsMesh: mesh, collisionClass: "rook"}
+    body.userData = {physicsMesh: mesh, collisionClass: "enemy"}
     mesh.userData.physicsBody = body;
 
     body.position.set(l.x, l.y, l.z);

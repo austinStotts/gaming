@@ -7,6 +7,7 @@ export default class Pea_Shooter {
         this.id = "pea_shooter";
         this.projectileDMG = 5;
         this.magazineSize = 30;
+        this.isHitScan = false;
         this.inMagazine = inMagazine;
         // this.inReserve = 0;
         this.ammo_id = 'small_ammo';
@@ -15,6 +16,7 @@ export default class Pea_Shooter {
         this.projectile_speed = 100; // in milliseconds
         this.swap_time = 400;
         this.camera_kick = 0.005;
+        this.text = "might literally shoot peas"
     }
 
     reload (player) {

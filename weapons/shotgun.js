@@ -15,6 +15,7 @@ export default class Shotgun {
         this.projectileDMG = 4;
         this.magazineSize = 8;
         this.inMagazine = inMagazine;
+        this.isHitScan = false;
         // this.inReserve = ammo - magazineSize;
         this.ammo_id = "shotgun_ammo";
         this.id = "shotgun";
@@ -25,6 +26,7 @@ export default class Shotgun {
         this.swap_time = 800;
         this.camera_kick = 0.15;
         this.number_of_pelets = 8;
+        this.text = "very epic and very dangerous"
     }
 
     reload (player) {

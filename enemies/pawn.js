@@ -9,12 +9,12 @@ let makePawn = (l) => {
     let material = new THREE.MeshBasicMaterial({ color: 0x674EA7, wireframe: false, transparent: false });
     let mesh = new THREE.Mesh(geometry, material);
 
-    let shape = new CANNON.Box(new CANNON.Vec3(1, 1, 1));
+    let shape = new CANNON.Box(new CANNON.Vec3(1.25, 1.25, 1.25));
     let body = new CANNON.Body({ shape, mass: 1, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01 });
 
     body.collisionFilterGroup = 1;
     body.collisionFilterMask = -1; 
-    body.userData = {physicsMesh: mesh, collisionClass: "pawn"};
+    body.userData = {physicsMesh: mesh, collisionClass: "enemy"};
     mesh.userData.physicsBody = body;
 
     body.position.set(l.x, l.y, l.z);

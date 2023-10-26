@@ -4,6 +4,7 @@ import * as CANNON from "cannon";
 import Pea_Shooter from "./weapons/pea_shooter";
 import Shotgun from "./weapons/shotgun";
 import Pulse_Bomb from './weapons/pulse_bomb';
+import Rifle from "./weapons/rifle";
 
 export default class Player {
     constructor(id) {
@@ -15,7 +16,7 @@ export default class Player {
         this.dec = 0.2;
         this.groundHeight = 0.25;
         this.inventory = [];
-        this.weapon = new Pulse_Bomb();
+        this.weapon = new Rifle;
         this.secondary = new Shotgun();
         this.mesh;
         this.body;
