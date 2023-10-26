@@ -101,26 +101,48 @@ let update_inv_ui = () => {
   w1_model.appendChild(w1_renderer.domElement);
   w1_renderer.domElement.id = "w1_canvas"
 
-  // let textGeometry;
+  let textGeometry;
+  let textMesh;
+  
+  let f = "./fonts/helvetiker_bold.typeface.json"
+  let loader = new FontLoader()
+  loader.load(f, (font) => {
+    textGeometry = new TextGeometry(PLAYER.weapon.display_name, {
+
+      font: font,
+      size: 30,
+      height: 5,
+      curveSegments: 12,
+      bevelEnabled: true,
+      bevelThickness: 1,
+      bevelSize: 0.5,
+      bevelSegments: 3
+  
+    });
+  
 
 
-  const textGeometry = new TextGeometry(PLAYER.weapon.display_name);
 
 
-  const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
+    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
 
-  const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-  textMesh.position.set(0,0,2);
-  textMesh.rotation.x = -Math.PI / 2;
-  w1_scene.add(textMesh);
+    textMesh = new THREE.Mesh(textGeometry, textMaterial);
+    textMesh.position.set(40,-10,40);
+    textMesh.rotation.y = (-Math.PI / 2) *2;
+    w1_scene.add(textMesh);
 
-  w1_camera.position.z = 0;
-  w1_camera.lookAt(0,0,2)
+    w1_camera.position.z = 0;
+    w1_camera.lookAt(0,0,2)
+
+  })
 
   function w1_animate() {
     requestAnimationFrame(w1_animate);
-    textMesh.rotation.x += 0.01;
-    textMesh.rotation.y += 0.01;
+    if(textMesh) {
+      textMesh.rotation.x += 0.01;
+      textMesh.rotation.y += 0.025;
+    }
+
     w1_renderer.render(w1_scene, w1_camera);
   }
 
