@@ -9,6 +9,25 @@ let get_random = (n) => {
     }
 }
 
+let makeWeapon = () => {
+    let geometry = new THREE.BoxGeometry(1, 1, 3);
+    let material = new THREE.MeshBasicMaterial({ color: 0x84A595, wireframe: false, transparent: false });
+    let mesh = new THREE.Mesh(geometry, material);
+
+    let shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 1.5));
+    let body = new CANNON.Body({ shape, mass: 10, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01, linearDamping: 0.5 });
+
+    body.collisionFilterGroup = 3;
+    body.collisionFilterMask = -1; 
+    body.userData = {collisionClass: "weapon"};
+    mesh.userData.physicsBody = body;
+
+    // body.position.set(l.x, l.y, l.z);
+    // mesh.position.copy(body.position);
+
+    return [mesh, body];
+}
+
 export default class Shotgun {
     constructor(inMagazine=0) {
         this.display_name = "Shotgun"
@@ -16,17 +35,18 @@ export default class Shotgun {
         this.magazineSize = 8;
         this.inMagazine = inMagazine;
         this.isHitScan = false;
-        // this.inReserve = ammo - magazineSize;
         this.ammo_id = "shotgun_ammo";
+        this.ammo_name = "shotgun";
         this.id = "shotgun";
         this.reloadTime = 1400; // in milliseconds
-        this.spreadMultiplier = 0.000000005;
+        this.spreadMultiplier = 0.005;
         this.removeAfterMS = 200; // in seconds
         this.projectile_speed = 150; // in milliseconds
         this.swap_time = 800;
-        this.camera_kick = 0.15;
+        this.camera_kick = 0.1;
         this.number_of_pelets = 8;
-        this.text = "very epic and very dangerous"
+        this.text = "very epic and very dangerous";
+        [this.mesh, this.body] = makeWeapon();
     }
 
     reload (player) {
@@ -73,7 +93,7 @@ export default class Shotgun {
             var vector = new THREE.Vector3();
             vector.setFromMatrixPosition(camera.matrixWorld); // Get the position of the camera in the world
             vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(0.5));
-            vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(-0.25));
+            vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(-1.25));
             vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).multiplyScalar(0));
     
             projectileMesh.position.copy(vector);

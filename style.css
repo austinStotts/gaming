@@ -108,6 +108,7 @@
 
 .character-wrapper {
     height: 100px;
+    width: 480px;
 }
 
 .items-wrapper {
@@ -164,35 +165,42 @@
 
 
 .armor-wrapper {
-    display: inline-block;
+    position: relative;
     height: 100%;
-    width: 160px;
-    border: 1px solid mediumpurple;
+    width: 158px;
+    /* border: 1px solid mediumpurple; */
+    border-right: 1px solid rgb(180, 180, 180);
 }
 
 .stats-wrapper {
-    display: inline-block;
+    position: relative;
+    left: 160px;
+    top: -100px;
     height: 100%;
-    width: 160px;
-    border: 1px solid salmon;
+    width: 158px;
+    
+    /* border: 1px solid salmon; */
+    border-right: 1px solid rgb(180, 180, 180);
 }
 
 .weapons-wrapper {
-    float: right;
-    display: inline-block;
+    position: relative;
+    left: 320px;
+    top: -200px;
     height: 100%;
     width: 160px;
-    border: 1px solid royalblue;
+    /* border: 1px solid royalblue; */
 }
 
 .weapon-label {
     font-family: monospace;
+    font-style: italic;
 }
 
 .weapon-model {
     width: 160px;
     height: 30px;
-    border: 1px solid blue;
+    /* border: 1px solid blue; */
 }
 
 #grayout {
@@ -381,4 +389,209 @@
     font-family: monospace;
     padding: 5px;
     z-index: 1001;
+}
+
+#w1-tooltip-wrapper {
+    background-color: black;
+    color: white;
+    position: relative;
+    /* bottom: -30px; */
+    left: -100px;
+    top: -30px;
+    width: 100px;
+    z-index: 102;
+    font-size: 14px;
+    font-family: monospace;
+    padding: 5px;
+}
+
+#w2-tooltip-wrapper {
+    background-color: black;
+    color: white;
+    position: relative;
+    /* bottom: -30px; */
+    left: -100px;
+    top: -30px;
+    width: 100px;
+    z-index: 102;
+    font-size: 14px;
+    font-family: monospace;
+    padding: 5px;
+    font-weight: 700;
+}
+
+.damage-label-tooltip {
+    font-family: monospace;
+    color: white;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    font-size: 12px;
+}
+
+.dmg-value {
+    color: crimson;
+}
+
+.reload-time {
+    font-family: monospace;
+    color: white;
+    position: relative;
+    top: 0px;
+    right: 0px;
+    /* float: right; */
+    font-size: 12px;
+}
+
+.reload-value {
+    color: darkseagreen;
+}
+
+.tooltip-time-label {
+    color: white;
+}
+
+.ammo-type {
+    font-family: monospace;
+    color: white;
+    position: relative;
+    top: 0px;
+    left: 0px;
+    font-size: 12px;
+}
+
+.energy {
+    color: #00FF00;
+}
+
+.small {
+    color: cornflowerblue;
+}
+
+.large {
+    color: crimson;
+}
+
+.w1-tooltip {
+    margin-top: 8px;
+    font-weight: 400;
+}
+
+.w2-tooltip {
+    margin-top: 8px;
+    font-weight: 400;
+}
+
+.hp-stat-wrapper {
+    /* border: 1px solid red; */
+    height: 20px;
+    font-family: monospace;
+}
+
+#hp-stat-value {
+    width: 20px;
+}
+
+.hp-stat-label {
+    display: inline-block;
+    /* padding-top: 5px; */
+    margin-left: 3px;
+    font-size: 12px;
+}
+
+#hp-stat-progress {
+    margin-top: 5px;
+    margin-right: 2px;
+    width: 80px;
+    height: 7px;
+    color: red;
+    border-radius: 3.5px;
+    float: right;
+}
+
+
+#hp-stat-progress::-moz-progress-bar {
+    color: red;
+    background-color: red;
+    border-radius: 20px;
+}
+
+#hp-stat-progress::-webkit-progress-value {
+    accent-color: green;
+    color: red;
+    background-color: rgb(133, 133, 255);
+    border-radius: 3.5px;
+    /* background-color: transparent; */
+}
+
+.shield-stat-wrapper {
+    /* border: 1px solid red; */
+    height: 20px;
+    font-family: monospace;
+}
+
+#shield-stat-value {
+    width: 20px;
+}
+
+.shield-stat-label {
+    display: inline-block;
+    /* padding-top: 5px; */
+    margin-left: 3px;
+    font-size: 12px;
+}
+
+#shield-stat-progress {
+    margin-top: 5px;
+    margin-right: 2px;
+    width: 80px;
+    height: 7px;
+    color: red;
+    border-radius: 3.5px;
+    float: right;
+}
+
+
+#shield-stat-progress::-moz-progress-bar {
+    color: red;
+    background-color: red;
+    border-radius: 20px;
+}
+
+#shield-stat-progress::-webkit-progress-value {
+    accent-color: green;
+    color: red;
+    background-color: rgb(133, 133, 255);
+    border-radius: 3.5px;
+    /* background-color: transparent; */
+}
+
+.value-modifiers-wrapper {
+    border-top: 1px solid rgb(180, 180, 180);
+    font-family: monospace;
+}
+
+.damage-modifier {
+    display: inline-block;
+}
+
+#dmg-modifier-value {
+    display: inline-block;
+    width: 20px;
+}
+
+.speed-modifier {
+    display: inline-block;
+}
+
+#speed-modifier-value {
+    display: inline-block;
+}
+
+.jump-modifier {
+    display: inline-block;
+}
+
+#jump-modifier-value {
+    display: inline-block;
 }

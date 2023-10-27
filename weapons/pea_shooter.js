@@ -1,6 +1,25 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
 
+let makeWeapon = () => {
+    let geometry = new THREE.BoxGeometry(1, 1, 3);
+    let material = new THREE.MeshBasicMaterial({ color: 0x03fc39, wireframe: false, transparent: false });
+    let mesh = new THREE.Mesh(geometry, material);
+
+    let shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 1.5));
+    let body = new CANNON.Body({ shape, mass: 10, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01, linearDamping: 0.5 });
+
+    body.collisionFilterGroup = 3;
+    body.collisionFilterMask = -1; 
+    body.userData = {collisionClass: "weapon"};
+    mesh.userData.physicsBody = body;
+
+    // body.position.set(l.x, l.y, l.z);
+    // mesh.position.copy(body.position);
+
+    return [mesh, body];
+}
+
 export default class Pea_Shooter {
     constructor(inMagazine=0) {
         this.display_name = "Pea Shooter"
@@ -16,7 +35,8 @@ export default class Pea_Shooter {
         this.projectile_speed = 100; // in milliseconds
         this.swap_time = 400;
         this.camera_kick = 0.005;
-        this.text = "might literally shoot peas"
+        this.text = "might literally shoot peas";
+        [this.mesh, this.body] = makeWeapon();
     }
 
     reload (player) {

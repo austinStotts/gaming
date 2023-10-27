@@ -21,6 +21,7 @@ import shotgun_ammo from './items/shotgun_ammo.js'
 import energy_ammo from './items/energy_ammo.js';
 import Pulse_Bomb from './weapons/pulse_bomb.js';
 import Shotgun from './weapons/shotgun.js';
+import Rifle from './weapons/rifle.js';
 
 
 // camera / movement
@@ -44,6 +45,8 @@ let wave = 1;
 let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
+
+let override = false;
 
 
 window.speed = (n=0.25) => {
@@ -90,66 +93,136 @@ let updateAmmo = (player) => {
 
 let update_inv_ui = () => {
   let w1_label = document.getElementById("weapon-one-label");
-  w1_label.textContent = PLAYER.weapon.display_name
-  let w1_model = document.getElementById("weapon-one-model");
   
-  const w1_scene = new THREE.Scene();
-  const w1_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
-  // w1_camera.position.set(2,5,0); 
-  const w1_renderer = new THREE.WebGLRenderer();
-  w1_renderer.setSize(160, 30);
-  w1_model.appendChild(w1_renderer.domElement);
-  w1_renderer.domElement.id = "w1_canvas"
+  // WEAPON ONE MODEL
 
-  let textGeometry;
-  let textMesh;
-  
-  let f = "./fonts/helvetiker_bold.typeface.json"
-  let loader = new FontLoader()
-  loader.load(f, (font) => {
-    textGeometry = new TextGeometry(PLAYER.weapon.display_name, {
+  if(PLAYER.weapon != undefined) {
+    w1_label.textContent = PLAYER.weapon.display_name;
+    let w1_model = document.getElementById("weapon-one-model");
 
-      font: font,
-      size: 30,
-      height: 5,
-      curveSegments: 12,
-      bevelEnabled: true,
-      bevelThickness: 1,
-      bevelSize: 0.5,
-      bevelSegments: 3
-  
-    });
-  
+    const w1_scene = new THREE.Scene();
+    const w1_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
+    const w1_renderer = new THREE.WebGLRenderer();
+    w1_renderer.setSize(160, 30);
+    w1_model.appendChild(w1_renderer.domElement);
+    w1_renderer.domElement.id = "w1_canvas"
+
+    let w1_tooltip = `
+    <div id="w1-tooltip-wrapper" hidden>
+      <div class="damage-label-tooltip">dmg:<span class="dmg-value">${PLAYER.weapon.projectileDMG}</span></div>
+      <div class="reload-time">reload:<span class="reload-value">${PLAYER.weapon.reloadTime/1000}s</span></div>
+      <div class="ammo-type">ammo:<span class="${PLAYER.weapon.ammo_name}">${PLAYER.weapon.ammo_name}</span></div>
+      <div id="w1-tooltip" class="w1-tooltip">${PLAYER.weapon.text}</div>
+    </div>`;
+
+    w1_model.insertAdjacentHTML( 'beforeend', w1_tooltip );
+
+    w1_model.onmouseover = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=false; }
+    w1_model.onmouseleave = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=true; }
 
 
 
+    let textGeometry;
+    let textMesh;
 
-    const textMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF });
+    let f = "./fonts/helvetiker_bold.typeface.json"
+    let loader = new FontLoader()
+    loader.load(f, (font) => {
+      textGeometry = new TextGeometry(PLAYER.weapon.display_name, {
+        font: font,
+        size: 30,
+        height: 5,
+        curveSegments: 12,
+        bevelEnabled: true,
+        bevelThickness: 1,
+        bevelSize: 0.5,
+        bevelSegments: 3
+      });
+      const textMaterial = new THREE.MeshBasicMaterial({ color: 0xFF0000 });
+      textMesh = new THREE.Mesh(textGeometry, textMaterial);
+      textMesh.position.set(40,-10,40);
+      textMesh.rotation.y = (-Math.PI / 2) *2;
+      w1_scene.add(textMesh);
+      w1_camera.position.z = 0;
+      w1_camera.lookAt(0,0,2)
+    })
 
-    textMesh = new THREE.Mesh(textGeometry, textMaterial);
-    textMesh.position.set(40,-10,40);
-    textMesh.rotation.y = (-Math.PI / 2) *2;
-    w1_scene.add(textMesh);
+    function w1_animate() {
+      requestAnimationFrame(w1_animate);
+      if(textMesh) {
+        textMesh.rotation.x += 0.01;
+        // textMesh.rotation.y += 0.025;
+      }
 
-    w1_camera.position.z = 0;
-    w1_camera.lookAt(0,0,2)
-
-  })
-
-  function w1_animate() {
-    requestAnimationFrame(w1_animate);
-    if(textMesh) {
-      textMesh.rotation.x += 0.01;
-      textMesh.rotation.y += 0.025;
+      w1_renderer.render(w1_scene, w1_camera);
     }
 
-    w1_renderer.render(w1_scene, w1_camera);
+    w1_animate();
   }
-
-  w1_animate();
-
   let w2_label = document.getElementById("weapon-two-label");
-  w2_label.textContent = PLAYER.secondary.display_name
+  
+    // WEAPON TWO MODEL
+  if(PLAYER.secondary != undefined) {
+    w2_label.textContent = PLAYER.secondary.display_name;
+    let w2_model = document.getElementById("weapon-two-model");
+    const w2_scene = new THREE.Scene();
+    const w2_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
+    const w2_renderer = new THREE.WebGLRenderer();
+    w2_renderer.setSize(160, 30);
+    w2_model.appendChild(w2_renderer.domElement);
+    w2_renderer.domElement.id = "w2_canvas"
+  
+    let w2_tooltip = `
+    <div id="w2-tooltip-wrapper" hidden>
+      <div class="damage-label-tooltip">dmg:<span class="dmg-value">${PLAYER.secondary.projectileDMG}</span></div>
+      <div class="reload-time">reload:<span class="reload-value">${PLAYER.secondary.reloadTime/1000}s</span></div>
+      <div class="ammo-type">ammo:<span class="${PLAYER.secondary.ammo_name}">${PLAYER.secondary.ammo_name}</span></div>
+      <div id="w2-tooltip" class="w2-tooltip">${PLAYER.secondary.text}</div>
+    </div>`;
+  
+    w2_model.insertAdjacentHTML( 'beforeend', w2_tooltip );
+  
+    w2_model.onmouseover = (e) => { document.getElementById(`w2-tooltip-wrapper`).hidden=false; }
+    w2_model.onmouseleave = (e) => { document.getElementById(`w2-tooltip-wrapper`).hidden=true; }
+
+
+    let textGeometry2;
+    let textMesh2;
+  
+    let f2 = "./fonts/helvetiker_bold.typeface.json"
+    let loader2 = new FontLoader()
+    loader2.load(f2, (font) => {
+      textGeometry2 = new TextGeometry(PLAYER.secondary.display_name, {
+        font: font,
+        size: 30,
+        height: 5,
+        curveSegments: 12,
+        bevelEnabled: true,
+        bevelThickness: 1,
+        bevelSize: 0.5,
+        bevelSegments: 3
+      });
+      const textMaterial = new THREE.MeshBasicMaterial({ color: 0x00FF00 });
+      textMesh2 = new THREE.Mesh(textGeometry2, textMaterial);
+      textMesh2.position.set(40,-10,40);
+      textMesh2.rotation.y = (-Math.PI / 2) *2;
+      w2_scene.add(textMesh2);
+      w2_camera.position.z = 0;
+      w2_camera.lookAt(0,0,2)
+    })
+  
+    function w2_animate() {
+      requestAnimationFrame(w2_animate);
+      if(textMesh2) {
+        textMesh2.rotation.x += 0.0075;
+        // textMesh2.rotation.y += 0.03;
+      }
+  
+      w2_renderer.render(w2_scene, w2_camera);
+    }
+  
+    w2_animate();
+  }
 }
 
 let updateHP = (player) => {
@@ -182,9 +255,10 @@ let init = () => {
 
   spawn();
   build_inventory();
-  giveItem(new small_ammo(30));
-  giveItem(new small_ammo(150));
-  giveItem(new energy_ammo(150));
+  giveItem(new small_ammo(60));
+  // giveItem(new small_ammo(150));
+  // giveItem(new energy_ammo(150));
+  // giveItem(new shotgun_ammo(150));
   updateAmmo(PLAYER);
   updateHP(PLAYER);
   update_inv_ui();
@@ -244,21 +318,14 @@ let reset = () => {
 
 // Scene
 const scene = new THREE.Scene();
-
-
 // CAMERA ** ** **
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(2,5,0);
-// camera.lookAt(0,5,-5);
-
-
 // Renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 renderer.domElement.id = "canvas"
-
-
 // CANNON SETUP
 let world = new CANNON.World();
 world.quatNormalizeSkip = 0;
@@ -502,31 +569,73 @@ let build_inventory = () => {
   PLAYER.inventory = inventory;
 }
 
-let test_ammo = new shotgun_ammo(30);
+let test_ammo = new small_ammo(30);
 let test_pack = new Health_pack(1);
-let test_pack1 = new Health_pack(1);
-let test_pack12 = new Health_pack(1);
-let test_pack123 = new Health_pack(1);
+let energyammo = new energy_ammo(120);
+let pb = new Pulse_Bomb();
+let rfl = new Rifle();
 
+let shotgunammo = new shotgun_ammo(24);
 let test_energy = new energy_ammo(20);
 
+let shotgun = new Shotgun();
+
+let giveWeapon = (weapon) => {
+  if(PLAYER.weapon == undefined) {
+    // give weapon to weapon slot
+    PLAYER.weapon = weapon;
+    weapon.toBeDeleted = true;
+  } else if(PLAYER.secondary == undefined) {
+    // give weapon to secondary slot
+    PLAYER.secondary = weapon;
+    weapon.toBeDeleted = true;
+  } else {
+    dropItem(PLAYER.weapon, PLAYER.body.position);
+    PLAYER.weapon = weapon;
+    weapon.toBeDeleted = true;
+    // drop weapon
+    // give new weapon
+  }
+
+  weapon.toBeDeleted = true;
+  console.log(weapon)
+  console.log(PLAYER)
+  update_inv_ui();
+  updateAmmo(PLAYER);
+  updateInventory();
+}
+
 let dropItem = (item, position) => {
+  let time = Date.now();
   item.body.position.set(position.x, position.y, position.z)
-  item.body.addEventListener('collide', (event) => {
-    if(event.body.userData.collisionClass == "player" && !item.body.userData.hasBeenCollected) {
-      item.body.userData.hasBeenCollected = true;
-      giveItem(item);
-      item.toBeDeleted = true;
-    }
-  })
-  active_items.push({item, createdAt: Date.now()})
+  if(item.body.userData.collisionClass != "weapon") {
+    item.body.addEventListener('collide', (event) => {
+      if(event.body.userData.collisionClass == "player" && !item.body.userData.hasBeenCollected) {
+        item.body.userData.hasBeenCollected = true;
+        giveItem(item);
+        item.toBeDeleted = true;
+      }
+    })
+  } else {
+    item.toBeDeleted = false;
+    item.body.userData.timecode = time;
+  }
+
+  active_items.push({item, createdAt: time})
   world.addBody(item.body);
   scene.add(item.mesh);
 }
 
 dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
 dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
-dropItem(test_energy, new CANNON.Vec3(0,13,-28))
+dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
+
+dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
+
+dropItem(rfl, new CANNON.Vec3(2,1,2))
+dropItem(pb, new CANNON.Vec3(4,1,4))
+dropItem(energyammo, new CANNON.Vec3(0,1,0))
+
 // dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
 // dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
 // dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
@@ -670,7 +779,7 @@ let move_towards_player = (mesh, body, speed) => {
   direction.sub(mesh.position);
 
   // const speed = 6; // Adjust this value to control the speed
-  const velocity = direction.clone().normalize().multiplyScalar(speed); // CHANGE TO 'SPEED'
+  const velocity = direction.clone().normalize().multiplyScalar(override ? 0 : speed); // CHANGE TO 'SPEED'
   
   // Apply the velocity to the Cannon.js body
   body.velocity.set(velocity.x, -1, velocity.z);
@@ -679,7 +788,25 @@ let move_towards_player = (mesh, body, speed) => {
 
 
 
-
+let interact = () => {
+  var cameraPosition = camera.position;
+  var cameraDirection = new THREE.Vector3();
+  camera.getWorldDirection(cameraDirection);
+  var start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  var raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
+  let intersections = raycast.intersectObjects(scene.children);
+  console.log(intersections)
+  for(let i = 0; i < intersections.length; i++) {
+      if(intersections[i].object.isMesh) {
+          let body = intersections[i].object.userData.physicsBody;
+          if(body.userData.collisionClass == "weapon") {
+            let weapon;
+            for(let i = 0; i < active_items.length; i++) { if(active_items[i].createdAt == body.userData.timecode) { weapon = active_items[i].item }}
+            giveWeapon(weapon);
+          }
+      }
+  }
+}
 
 
 // _________________________________________
@@ -726,6 +853,9 @@ let onKeyDown = (event) => {
     case "2":
       swap_weapons();
       break
+    case "f":
+      interact();
+      break
     case "k":
       clearEnemies();
       break
@@ -736,6 +866,10 @@ let onKeyDown = (event) => {
     case "p":
       printPlayerPosition();
       break
+    case "o":
+      override = !override;
+      break
+
   }
 }
 
@@ -938,10 +1072,8 @@ function createProjectile(player) {
     player.weapon.removeAmmo(player);
     updateAmmo(player);
     // CAMERA KICK WIP - - - - 
-    var rotationMatrix = new THREE.Matrix4();
-    rotationMatrix.makeRotationAxis(new THREE.Vector3(1, 0, 0), player.weapon.camera_kick);
-    camera.applyMatrix4(rotationMatrix);
     cameraRotation.x += player.weapon.camera_kick;
+    camera.rotateX(player.weapon.camera_kick)
     if(player.weapon.isHitScan) {
       // console.log("HITSCAN!");
       player.weapon.createProjectile(camera, world, scene, enemies, damageEnemy)
