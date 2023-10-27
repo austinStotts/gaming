@@ -30,8 +30,22 @@ export default (position, options) => {
 
   // Create walls
   const wallThickness = 0.1;
+
+  const textureLoader = new THREE.TextureLoader();
+  const texture = textureLoader.load('../wall.jpg');
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+
+  // Set the number of times the texture repeats
+  const repeatX = depth; // Repeat 4 times along the x-axis
+  const repeatY = height; // Repeat 4 times along the y-axis
+  texture.repeat.set(repeatX, repeatY);
+
+  // Create a material using the texture
+  // const material = 
+
   const wallGeometry = new THREE.BoxGeometry(wallThickness*2, height, depth);
-  const wallMaterial = new THREE.MeshBasicMaterial({ color, wireframe: false });
+  const wallMaterial = new THREE.MeshBasicMaterial({ map: texture });
 
 
   if(options.walls.leftwall) {
