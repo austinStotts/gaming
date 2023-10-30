@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+
 import * as CANNON from "cannon";
 
 let get_random = (n) => {
@@ -13,6 +14,23 @@ let makeWeapon = () => {
     let geometry = new THREE.BoxGeometry(1, 1, 3);
     let material = new THREE.MeshBasicMaterial({ color: 0x84A595, wireframe: false, transparent: false });
     let mesh = new THREE.Mesh(geometry, material);
+    let edgeGeo = new THREE.EdgesGeometry(geometry);
+    var edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff }); // You can customize the color and linewidth
+    var edgeMesh = new THREE.LineSegments(edgeGeo, edgeMat);
+    // edgeMesh.position.x = 4; // Adjust position as needed
+    // edgeMesh.material.linewidth = 10;
+
+    // var edgeMesh = new THREE.Mesh(geometry, new THREE.MeshNormalMaterial());
+
+    // // Set wireframe to true and adjust the linewidth
+    // edgeMesh.material.wireframe = true;
+    // edgeMesh.material.wireframeLinewidth = 10;
+
+ 
+        
+
+    mesh.userData.edgeMesh = edgeMesh;
+    mesh.userData.isInteractable = true;
 
     let shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 1.5));
     let body = new CANNON.Body({ shape, mass: 10, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01, linearDamping: 0.5 });

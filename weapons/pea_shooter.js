@@ -5,6 +5,12 @@ let makeWeapon = () => {
     let geometry = new THREE.BoxGeometry(1, 1, 3);
     let material = new THREE.MeshBasicMaterial({ color: 0x03fc39, wireframe: false, transparent: false });
     let mesh = new THREE.Mesh(geometry, material);
+    let edgeGeo = new THREE.EdgesGeometry(geometry);
+    let edgeMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: false, transparent: false }); 
+    let edgeMesh = new THREE.Mesh(edgeGeo, edgeMat);
+    edgeMesh.scale.add(0.25)
+    mesh.userData.edgeMesh = edgeMesh;
+    mesh.userData.isInteractable = true;
 
     let shape = new CANNON.Box(new CANNON.Vec3(0.5, 0.5, 1.5));
     let body = new CANNON.Body({ shape, mass: 10, angularVelocity: {x: 0, y: 0, z: 0}, angularDamping: 0.01, linearDamping: 0.5 });

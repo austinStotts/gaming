@@ -91,22 +91,53 @@ let updateAmmo = (player) => {
   // reserve.textContent = player.weapon.inReserve;
 }
 
+// _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+// WEAPON MODEL SCENE CREATION
+// CREATE ONCE!!!!
+let w1_model = document.getElementById("weapon-one-model");
+const w1_scene = new THREE.Scene();
+const w1_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
+const w1_renderer = new THREE.WebGLRenderer();
+w1_renderer.setSize(160, 30);
+w1_model.appendChild(w1_renderer.domElement);
+w1_renderer.domElement.id = "w1_canvas";
+let textMesh;
+function w1_animate() {
+  requestAnimationFrame(w1_animate);
+  if(textMesh) {
+    textMesh.rotation.x += 0.01;
+  }
+  w1_renderer.render(w1_scene, w1_camera);
+}
+w1_animate();
+
+// WEAPON 2!
+let w2_model = document.getElementById("weapon-two-model");
+const w2_scene = new THREE.Scene();
+const w2_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
+const w2_renderer = new THREE.WebGLRenderer();
+w2_renderer.setSize(160, 30);
+w2_model.appendChild(w2_renderer.domElement);
+w2_renderer.domElement.id = "w2_canvas"
+let textMesh2;
+function w2_animate() {
+  requestAnimationFrame(w2_animate);
+  if(textMesh2) {
+    textMesh2.rotation.x += 0.0075;
+  }
+  w2_renderer.render(w2_scene, w2_camera);
+}
+w2_animate();
+
+// * * * * * MODEL UPDATE FUNCTION
 let update_inv_ui = () => {
   let w1_label = document.getElementById("weapon-one-label");
-  
   // WEAPON ONE MODEL
-
   if(PLAYER.weapon != undefined) {
+    w1_scene.children.forEach(child => {
+      w1_scene.remove(child);
+    })
     w1_label.textContent = PLAYER.weapon.display_name;
-    let w1_model = document.getElementById("weapon-one-model");
-
-    const w1_scene = new THREE.Scene();
-    const w1_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
-    const w1_renderer = new THREE.WebGLRenderer();
-    w1_renderer.setSize(160, 30);
-    w1_model.appendChild(w1_renderer.domElement);
-    w1_renderer.domElement.id = "w1_canvas"
-
     let w1_tooltip = `
     <div id="w1-tooltip-wrapper" hidden>
       <div class="damage-label-tooltip">dmg:<span class="dmg-value">${PLAYER.weapon.projectileDMG}</span></div>
@@ -114,17 +145,11 @@ let update_inv_ui = () => {
       <div class="ammo-type">ammo:<span class="${PLAYER.weapon.ammo_name}">${PLAYER.weapon.ammo_name}</span></div>
       <div id="w1-tooltip" class="w1-tooltip">${PLAYER.weapon.text}</div>
     </div>`;
-
     w1_model.insertAdjacentHTML( 'beforeend', w1_tooltip );
-
     w1_model.onmouseover = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=false; }
     w1_model.onmouseleave = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=true; }
-
-
-
     let textGeometry;
-    let textMesh;
-
+    
     let f = "./fonts/helvetiker_bold.typeface.json"
     let loader = new FontLoader()
     loader.load(f, (font) => {
@@ -146,32 +171,17 @@ let update_inv_ui = () => {
       w1_camera.position.z = 0;
       w1_camera.lookAt(0,0,2)
     })
-
-    function w1_animate() {
-      requestAnimationFrame(w1_animate);
-      if(textMesh) {
-        textMesh.rotation.x += 0.01;
-        // textMesh.rotation.y += 0.025;
-      }
-
-      w1_renderer.render(w1_scene, w1_camera);
-    }
-
-    w1_animate();
   }
-  let w2_label = document.getElementById("weapon-two-label");
+  
+  
   
     // WEAPON TWO MODEL
+  let w2_label = document.getElementById("weapon-two-label");
   if(PLAYER.secondary != undefined) {
+    w2_scene.children.forEach(child => {
+      w2_scene.remove(child);
+    })
     w2_label.textContent = PLAYER.secondary.display_name;
-    let w2_model = document.getElementById("weapon-two-model");
-    const w2_scene = new THREE.Scene();
-    const w2_camera = new THREE.PerspectiveCamera(75, 160 / 30, 0.1, 1000);
-    const w2_renderer = new THREE.WebGLRenderer();
-    w2_renderer.setSize(160, 30);
-    w2_model.appendChild(w2_renderer.domElement);
-    w2_renderer.domElement.id = "w2_canvas"
-  
     let w2_tooltip = `
     <div id="w2-tooltip-wrapper" hidden>
       <div class="damage-label-tooltip">dmg:<span class="dmg-value">${PLAYER.secondary.projectileDMG}</span></div>
@@ -179,15 +189,12 @@ let update_inv_ui = () => {
       <div class="ammo-type">ammo:<span class="${PLAYER.secondary.ammo_name}">${PLAYER.secondary.ammo_name}</span></div>
       <div id="w2-tooltip" class="w2-tooltip">${PLAYER.secondary.text}</div>
     </div>`;
-  
     w2_model.insertAdjacentHTML( 'beforeend', w2_tooltip );
-  
     w2_model.onmouseover = (e) => { document.getElementById(`w2-tooltip-wrapper`).hidden=false; }
     w2_model.onmouseleave = (e) => { document.getElementById(`w2-tooltip-wrapper`).hidden=true; }
 
-
     let textGeometry2;
-    let textMesh2;
+    
   
     let f2 = "./fonts/helvetiker_bold.typeface.json"
     let loader2 = new FontLoader()
@@ -210,18 +217,6 @@ let update_inv_ui = () => {
       w2_camera.position.z = 0;
       w2_camera.lookAt(0,0,2)
     })
-  
-    function w2_animate() {
-      requestAnimationFrame(w2_animate);
-      if(textMesh2) {
-        textMesh2.rotation.x += 0.0075;
-        // textMesh2.rotation.y += 0.03;
-      }
-  
-      w2_renderer.render(w2_scene, w2_camera);
-    }
-  
-    w2_animate();
   }
 }
 
@@ -324,6 +319,7 @@ camera.position.set(2,5,0);
 // Renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.getContext().linewidth = 6;
 document.body.appendChild(renderer.domElement);
 renderer.domElement.id = "canvas"
 // CANNON SETUP
@@ -630,11 +626,12 @@ dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
 dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
 dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
 
-dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
+// dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
+dropItem(shotgun, new CANNON.Vec3(0, 13, -6))
 
-dropItem(rfl, new CANNON.Vec3(2,1,2))
-dropItem(pb, new CANNON.Vec3(4,1,4))
-dropItem(energyammo, new CANNON.Vec3(0,1,0))
+// dropItem(rfl, new CANNON.Vec3(2,1,2))
+// dropItem(pb, new CANNON.Vec3(4,1,4))
+// dropItem(energyammo, new CANNON.Vec3(0,1,0))
 
 // dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
 // dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
@@ -785,8 +782,32 @@ let move_towards_player = (mesh, body, speed) => {
   body.velocity.set(velocity.x, -1, velocity.z);
 }
 
+let interactionMeshes = [];
+let checkInteractable = () => {
+  interactionMeshes.forEach((mesh, i) => {
+    scene.remove(mesh.mesh);
+    interactionMeshes.splice(i,1);
+  })
+  var cameraPosition = camera.position;
+  var cameraDirection = new THREE.Vector3();
+  camera.getWorldDirection(cameraDirection);
+  var start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  var raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
+  let intersections = raycast.intersectObjects(scene.children);
+  if(intersections.length > 0) {
+    if(intersections[0].object.userData.isInteractable) {
+      let time = Date.now();
+      let edgeMesh = intersections[0].object.userData.edgeMesh;
+      // edgeMesh.material.lineWidth = 10;
+      edgeMesh.userData.createdAt = time;
+      // edgeMesh.position.copy(intersections[0].object.position);
+      interactionMeshes.push({mesh: edgeMesh, meshToTrack: intersections[0].object, createdAt: time})
+      scene.add(edgeMesh)
+    }
+  }
+}
 
-
+setInterval(() => { checkInteractable() }, 100)
 
 let interact = () => {
   var cameraPosition = camera.position;
@@ -1230,6 +1251,11 @@ let updateItems = () => {
       removeItems(item.item)
       active_items.splice(i, 1);
     }
+  })
+
+  interactionMeshes.forEach((mesh, i) => {
+    mesh.mesh.position.copy(mesh.meshToTrack.position);
+    mesh.mesh.rotation.copy(mesh.meshToTrack.rotation)
   })
 }
 
