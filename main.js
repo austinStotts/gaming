@@ -11,6 +11,7 @@ import Rook from './enemies/rook.js';
 import Pea_Shooter from './weapons/pea_shooter.js';
 import makeRamp from './helpers/makeRamp.js';
 import makeRoom from './helpers/makeRoom.js';
+import makeDoor from './helpers/makeDoor.js';
 
 import map_functions from "./map.js";
 import waves from "./waves.js";
@@ -24,6 +25,10 @@ import Shotgun from './weapons/shotgun.js';
 import Rifle from './weapons/rifle.js';
 
 
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// GLOBAL VARIABLES - needs cleanup
 // camera / movement
 let sensitivity = 0.0002; // CEMERA SENS ** ** **
 let floor = 2;
@@ -45,10 +50,13 @@ let wave = 1;
 let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
-
 let override = false;
 
 
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// FUNCTIONS FOR CHANGING GAME SETTING FROM CONSOLE
 window.speed = (n=0.25) => {
   if(typeof n == "number") {
     speed = n;
@@ -71,26 +79,10 @@ window.sens = (n=0.0002) => {
 
 
 
-let updateAmmo = (player) => {
-  let mag = document.getElementById("mag");
-  let reserve = document.getElementById("reserve");
 
 
-  mag.textContent = player.weapon.inMagazine;
-  let foundAmmo = false;
-  for(let i = 0; i < player.inventory.length; i++) {
-    if(player.inventory[i] != undefined) {
-      if(player.inventory[i].id == player.weapon.ammo_id) {
-        reserve.textContent = player.inventory[i].count;
-        foundAmmo = true;
-        break
-      }
-    }
-  }
-  if(!foundAmmo) {reserve.textContent = 0}
-  // reserve.textContent = player.weapon.inReserve;
-}
 
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 // WEAPON MODEL SCENE CREATION
 // CREATE ONCE!!!!
@@ -129,6 +121,9 @@ function w2_animate() {
 }
 w2_animate();
 
+// ^ above is creating the 2 scenes for weapons
+//   below is updating the models
+
 // * * * * * MODEL UPDATE FUNCTION
 let update_inv_ui = () => {
   let w1_label = document.getElementById("weapon-one-label");
@@ -148,8 +143,8 @@ let update_inv_ui = () => {
     w1_model.insertAdjacentHTML( 'beforeend', w1_tooltip );
     w1_model.onmouseover = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=false; }
     w1_model.onmouseleave = (e) => { document.getElementById(`w1-tooltip-wrapper`).hidden=true; }
+
     let textGeometry;
-    
     let f = "./fonts/helvetiker_bold.typeface.json"
     let loader = new FontLoader()
     loader.load(f, (font) => {
@@ -173,9 +168,7 @@ let update_inv_ui = () => {
     })
   }
   
-  
-  
-    // WEAPON TWO MODEL
+  // WEAPON TWO MODEL
   let w2_label = document.getElementById("weapon-two-label");
   if(PLAYER.secondary != undefined) {
     w2_scene.children.forEach(child => {
@@ -194,8 +187,6 @@ let update_inv_ui = () => {
     w2_model.onmouseleave = (e) => { document.getElementById(`w2-tooltip-wrapper`).hidden=true; }
 
     let textGeometry2;
-    
-  
     let f2 = "./fonts/helvetiker_bold.typeface.json"
     let loader2 = new FontLoader()
     loader2.load(f2, (font) => {
@@ -217,7 +208,40 @@ let update_inv_ui = () => {
       w2_camera.position.z = 0;
       w2_camera.lookAt(0,0,2)
     })
+  } else {
+    w2_label.innerText = "none"
   }
+}
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+//   *  *  *  *  *  *  *  *  *  *  *  *  *  *
+
+
+
+
+
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// HELPER FUNCTIONS FOR GAME UI
+
+let updateAmmo = (player) => {
+  let mag = document.getElementById("mag");
+  let reserve = document.getElementById("reserve");
+
+
+  mag.textContent = player.weapon.inMagazine;
+  let foundAmmo = false;
+  for(let i = 0; i < player.inventory.length; i++) {
+    if(player.inventory[i] != undefined) {
+      if(player.inventory[i].id == player.weapon.ammo_id) {
+        reserve.textContent = player.inventory[i].count;
+        foundAmmo = true;
+        break
+      }
+    }
+  }
+  if(!foundAmmo) {reserve.textContent = 0}
 }
 
 let updateHP = (player) => {
@@ -240,14 +264,12 @@ let getWeapon = (id) => {
   else if(id == "shotgun") { return Shotgun }
 }
 
+// ## ## ## ## ## ## ## ##
+// INIT FUNCTION - RUNS ONCE AT START
 let init = () => {
   scene.add(floorMesh);
   world.addBody(floorBody);
-  // scene.add(zero)
-  // scene.add(xLine)
-  // scene.add(yLine)
   create_player_body(PLAYER)
-
   spawn();
   build_inventory();
   giveItem(new small_ammo(60));
@@ -258,12 +280,14 @@ let init = () => {
   updateHP(PLAYER);
   update_inv_ui();
   updateWave();
+  
 }
 
+// ## ## ## ## ## ## ## ## ## ## ##
+// RETET GAME WORLD
 document.getElementById("try-again").addEventListener("click", () => { reset() })
-
 let reset = () => {
-  if(window.localStorage.getItem("player_data") != undefined) {
+  if(window.localStorage.getItem("player_data") != undefined) { // IF PROGRESS HAS BEEN SAVED ALREADY
     clearEnemies();
     clearItems();
     let old_player = JSON.parse(window.localStorage.getItem("player_data"));
@@ -284,7 +308,7 @@ let reset = () => {
     updateHP(PLAYER);
     updateAmmo(PLAYER);
     updateWave();
-  } else {
+  } else { // IF NO PROGRESS WAS SAVED - AKA RESET TO INIT VALUES
     console.log("NO PLAYER FOUND");
     clearEnemies();
     clearItems();
@@ -310,18 +334,21 @@ let reset = () => {
 }
 
 
-
+// ## ## ## ## ## ## ## ##
 // Scene
 const scene = new THREE.Scene();
-// CAMERA ** ** **
+// ## ## ## ## ## ## ## ##
+// CAMERA
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 camera.position.set(2,5,0);
+// ## ## ## ## ## ## ## ##
 // Renderer
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.getContext().linewidth = 6;
 document.body.appendChild(renderer.domElement);
 renderer.domElement.id = "canvas"
+// ## ## ## ## ## ## ## ##
 // CANNON SETUP
 let world = new CANNON.World();
 world.quatNormalizeSkip = 0;
@@ -333,32 +360,27 @@ world.broadphase = new CANNON.NaiveBroadphase();
 let phyMaterial = new CANNON.Material("slipperyMaterial");
 let phyContactMaterial = new CANNON.ContactMaterial(phyMaterial, phyMaterial, 0.0, 0.3);
 world.addContactMaterial(phyContactMaterial)
-world.defaultContactMaterial.friction = 0.05; // ** ** ** this one
-var solver = new CANNON.GSSolver();
+world.defaultContactMaterial.friction = 0.05;
+let solver = new CANNON.GSSolver();
 solver.iterations = 7;
 solver.tolerance = 0.1;
 world.solver = new CANNON.SplitSolver(solver);
 world.solver.iterations = 7;
-
-
-
+// ## ## ## ## ## ## ## ##
 // FLOOR
 const floorGeometry = new THREE.PlaneGeometry(1000,1000);
 const floorMaterial = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: true });
 const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
 floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
 floorMesh.position.set(0,0,0);
-
 const floorShape = new CANNON.Plane();
 let floorBody = new CANNON.Body({ mass: 0, shape: floorShape });
 floorBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1, 0, 0), -Math.PI / 2);
 floorBody.userData = {physicsMesh: floorMesh, collisionClass: "floor"}
 floorMesh.userData.physicsBody = floorBody;
-// console.log(floorBody);
 floorBody.collisionFilterGroup = 1;
 floorBody.collisionFilterMask = -1;
-
-
+// ## ## ## ## ## ## ## ##
 // CREATE PLAYER BODY
 let create_player_body = (player) => {
   let shape = new CANNON.Box(new CANNON.Vec3(1,2,1));
@@ -397,34 +419,34 @@ let get_random = (n) => {
 
 
 
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// INVENTORY
 
-//`./item_images/${PLAYER.inventory[i].item_img}`;
 let updateInventory = () => {
   let inv = document.getElementById("items-wrapper");
-  // console.log(inv.childNodes)
   inv.childNodes.forEach((cell,i) => {
     if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
-
+      // item img
       let img = document.createElement("img");
       img.src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`;
       img.classList.add("item");
       img.ondragstart = () => false;
-
-
+      // item counter
       let counter = document.createElement("div");
       counter.classList.add("counter");
       counter.textContent = PLAYER.inventory[i].count;
-
+      // tooltip on mouse over
       let tooltip = document.createElement("div");
       tooltip.hidden = true;
       tooltip.textContent = PLAYER.inventory[i].text;
       tooltip.id = `tooltip-${i}`;
       tooltip.classList.add("tooltip");
-
+      // add elements to html
       cell.appendChild(img);
       cell.appendChild(counter);
       cell.appendChild(tooltip);
-
       cell.onmouseover = (e) => { console.log("MOUSE OVER ", i); document.getElementById(`tooltip-${i}`).hidden=false; }
       cell.onmouseleave = (e) => { document.getElementById(`tooltip-${i}`).hidden=true; }
 
@@ -432,9 +454,7 @@ let updateInventory = () => {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
       cell.childNodes[0].src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`
     } else {
-      if(cell.childNodes.length>0) {
-        // console.log("REMOVING", i)
-        // for(let i = 0; i < cell.childNodes.length; i++) { cell.removeChild(cell.childNodes[i]) }
+      if(cell.childNodes.length>0) { // remove in backwards order
         cell.removeChild(cell.childNodes[2])
         cell.removeChild(cell.childNodes[1])
         cell.removeChild(cell.childNodes[0])
@@ -442,8 +462,6 @@ let updateInventory = () => {
     }
   })
 }
-
-
 
 let isInventoryOpen = false;
 let toggle_inventory = () => {
@@ -460,14 +478,17 @@ let toggle_inventory = () => {
   }
 }
 
-let toggleCursorLock = () => {
-  if(!isInventoryOpen && !isAlreadyDead) {
+let toggleCursorLock = (force=false) => {
+  if(force) {
     canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
     canvas.requestPointerLock();
   } else {
-    // canvas.exitPointerLock = canvas.exitPointerLock || canvas.mozExitPointerLock || canvas.webkitExitPointerLock;
-    document.exitPointerLock();
-    // console.log("EXIT POINTER LOCK")
+    if(!isInventoryOpen && !isAlreadyDead) {
+      canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
+      canvas.requestPointerLock();
+    } else {
+      document.exitPointerLock();
+    }
   }
 }
 
@@ -480,12 +501,10 @@ let showItemPickup = (item) => {
   let id = `item-pickup-log-${Date.now()}`;
   listItem.id = id;
   log.appendChild(listItem);
-
   setTimeout(() => {
     log.removeChild(listItem);
   },5000)
 }
-
 
 let giveItem = (item) => {
   if(item.isStack) {
@@ -523,13 +542,12 @@ let giveItem = (item) => {
     }
     if(!didGive) { console.log("inventory full") }
   }
-  // console.log(PLAYER.inventory)
 }
 
 let inv_start;
 let inv_end;
 
-let inv_drop = (event, id) => {
+let inv_drop = (event, id) => { 
   inv_end = id;
   [PLAYER.inventory[inv_start], PLAYER.inventory[inv_end]] = [PLAYER.inventory[inv_end], PLAYER.inventory[inv_start]];
   // console.log(PLAYER.inventory)
@@ -551,7 +569,6 @@ let useItem = (e, i) => {
 }
 
 let build_inventory = () => {
-  
   let inventory = new Array(40).fill(undefined);
   let element = document.getElementById("items-wrapper");
   inventory.forEach((item, i) => {
@@ -578,19 +595,15 @@ let shotgun = new Shotgun();
 
 let giveWeapon = (weapon) => {
   if(PLAYER.weapon == undefined) {
-    // give weapon to weapon slot
     PLAYER.weapon = weapon;
     weapon.toBeDeleted = true;
   } else if(PLAYER.secondary == undefined) {
-    // give weapon to secondary slot
     PLAYER.secondary = weapon;
     weapon.toBeDeleted = true;
   } else {
     dropItem(PLAYER.weapon, PLAYER.body.position);
     PLAYER.weapon = weapon;
     weapon.toBeDeleted = true;
-    // drop weapon
-    // give new weapon
   }
 
   weapon.toBeDeleted = true;
@@ -601,7 +614,7 @@ let giveWeapon = (weapon) => {
   updateInventory();
 }
 
-let dropItem = (item, position) => {
+let dropItem = (item, position) => { // put item at any location
   let time = Date.now();
   item.body.position.set(position.x, position.y, position.z)
   if(item.body.userData.collisionClass != "weapon") {
@@ -640,9 +653,8 @@ dropItem(shotgun, new CANNON.Vec3(0, 13, -6))
 
 
 
-//
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // WORLD GEN
-//
 
 const light = new THREE.AmbientLight( 0x404040 ); // soft white light
 light.position.set(0,30,0)
@@ -663,8 +675,7 @@ let build = (position, angle, options) => {
         body.quaternion.copy(object.quaternion)
       }
 
-      // Assuming 'object' is the Three.js object you want to rotate
-      let axis = new THREE.Vector3(0, 1, 0); // The axis around which you want to rotate
+      let axis = new THREE.Vector3(0, 1, 0);
       rotateObject(mesh, axis, angle);
       world.addBody(body);
     }
@@ -672,10 +683,14 @@ let build = (position, angle, options) => {
   scene.add(roomGroup);
 }
 
-// let [rampMesh, rampBody] = makeRamp(5, 10, {rotation: (-Math.PI / 4), angle: (-Math.PI / 6)});
-// rampBody.position.set(7.5, 2.5, 20);
-// scene.add(rampMesh);
-// world.addBody(rampBody);
+let [doorMesh, doorBody] = makeDoor(5, 12);
+doorBody.position.set(-49.8, 18, 32.5);
+doorMesh.position.copy(doorBody.position)
+doorBody.userData.isInteractable = true;
+doorBody.userData.name = "locked door";
+scene.add(doorMesh);
+world.addBody(doorBody);
+console.log(doorBody)
 
 map_functions.forEach(args => { build(args[0], args[1], args[2]) })
 // position, rotation, options
@@ -686,18 +701,7 @@ map_functions.forEach(args => { build(args[0], args[1], args[2]) })
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // __ __ __ __ __ __ __ __ __ __ __
 // ENEMIES
 
@@ -735,34 +739,23 @@ let enemyCollision = (event) => {
   }
 }
 
-
-
-// __ __ __ __ __ __ __ __ __
-// NEW SPAWN FUNCTION
-
 let hasSpawned = false;
 let spawn = () => {
   let thisWave = waves[wave];
   
   if(thisWave) {
     for(let i = 0; i < thisWave.enemies.length; i++) {
-      console.log(thisWave.enemies[i]);
       let mesh = thisWave.enemies[i].mesh;
       let body = thisWave.enemies[i].body;
-
       body.addEventListener('collide', enemyCollision);
-
       scene.add(mesh);
       world.addBody(body);
-
       body.userData.id = `${wave}_${i}_${thisWave.enemies[i].class}`
       enemies[`${wave}_${i}_${thisWave.enemies[i].class}`] = thisWave.enemies[i];
     }
     hasSpawned = true;
   }
 }
-
-
 
 let removeEnemy = (id) => {
   bodiesToRemove.push(enemies[id].body);
@@ -774,12 +767,28 @@ let move_towards_player = (mesh, body, speed) => {
   let direction = new THREE.Vector3();
   camera.getWorldPosition(direction);
   direction.sub(mesh.position);
-
-  // const speed = 6; // Adjust this value to control the speed
   const velocity = direction.clone().normalize().multiplyScalar(override ? 0 : speed); // CHANGE TO 'SPEED'
-  
-  // Apply the velocity to the Cannon.js body
   body.velocity.set(velocity.x, -1, velocity.z);
+}
+
+
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ##
+// INTERACT WITH WORLD
+
+let updateInteractUI = (show=false, value) => {
+  let interactBox = document.getElementById("interact-wrapper");
+  let key = document.getElementById("interact-key");
+  let label = document.getElementById("interact-label");
+  if(show) {
+    interactBox.hidden = false;
+    label.innerText = ` [${value.userData.physicsBody.userData.name}]`;
+  } else {
+    interactBox.hidden = true;
+    label.innerText = "";
+  }
+
 }
 
 let interactionMeshes = [];
@@ -788,33 +797,36 @@ let checkInteractable = () => {
     scene.remove(mesh.mesh);
     interactionMeshes.splice(i,1);
   })
-  var cameraPosition = camera.position;
-  var cameraDirection = new THREE.Vector3();
+  let cameraPosition = camera.position;
+  let cameraDirection = new THREE.Vector3();
   camera.getWorldDirection(cameraDirection);
-  var start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-  var raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
+  let start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  let raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
   let intersections = raycast.intersectObjects(scene.children);
   if(intersections.length > 0) {
     if(intersections[0].object.userData.isInteractable) {
       let time = Date.now();
       let edgeMesh = intersections[0].object.userData.edgeMesh;
-      // edgeMesh.material.lineWidth = 10;
       edgeMesh.userData.createdAt = time;
-      // edgeMesh.position.copy(intersections[0].object.position);
       interactionMeshes.push({mesh: edgeMesh, meshToTrack: intersections[0].object, createdAt: time})
-      scene.add(edgeMesh)
+      scene.add(edgeMesh);
+      updateInteractUI(true, intersections[0].object)
+    } else {
+      updateInteractUI(false);
     }
+  } else {
+    updateInteractUI(false);
   }
 }
 
 setInterval(() => { checkInteractable() }, 100)
 
 let interact = () => {
-  var cameraPosition = camera.position;
-  var cameraDirection = new THREE.Vector3();
+  let cameraPosition = camera.position;
+  let cameraDirection = new THREE.Vector3();
   camera.getWorldDirection(cameraDirection);
-  var start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
-  var raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
+  let start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
+  let raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
   let intersections = raycast.intersectObjects(scene.children);
   console.log(intersections)
   for(let i = 0; i < intersections.length; i++) {
@@ -830,8 +842,8 @@ let interact = () => {
 }
 
 
-// _________________________________________
-// Keyboard controls
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// KEYBOARD CONTROLS
 const keyboardState = {};
 document.addEventListener('keydown', (event) => {
     keyboardState[event.key] = true;
@@ -840,14 +852,7 @@ document.addEventListener('keyup', (event) => {
     keyboardState[event.key] = false;
 });
 
-
-
-// ______________________________________________________________________
-// $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-// NEW PLAYER INPUT FUNCTION
-
 let keys = {};
-
 let onKeyDown = (event) => {
   switch (event.key) {
     case "w":
@@ -873,6 +878,9 @@ let onKeyDown = (event) => {
       break
     case "2":
       swap_weapons();
+      break
+    case " ":
+      jump();
       break
     case "f":
       interact();
@@ -933,32 +941,10 @@ let playerInputs = () => {
   }
 }
 
-let printPlayerPosition = () => {
-  console.log("\nplayer's current location:");
-  console.log(`x: ${PLAYER.body.position.x}`);
-  console.log(`y: ${PLAYER.body.position.y}`);
-  console.log(`z: ${PLAYER.body.position.z}`);
-  console.log("-- -- -- -- -- -- --\n")
-}
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ## ## ## ## ## ## ## ## ## ## ## ##
+// RELOAD AND SWAP WEAPONS
 
 let isReloading = false;
 let reload = (player) => {
@@ -975,7 +961,6 @@ let animateReload = () => {
   let progress = document.getElementById("reload-loader");
   progress.style.display = "block";
   let id = setInterval(() => {
-    // console.log(progress.value)
     if(Date.now() >= start + time) {
       progress.value = 0;
       progress.style.display = "none";
@@ -996,7 +981,6 @@ let swap_weapons = () => {
   let holder = PLAYER.weapon;
   PLAYER.weapon = PLAYER.secondary;
   PLAYER.secondary = holder;
-  // updateAmmo(PLAYER);
 }
 
 let animateSwap = () => {
@@ -1005,7 +989,6 @@ let animateSwap = () => {
   let progress = document.getElementById("weapon-loader");
   progress.style.display = "block";
   let id = setInterval(() => {
-    // console.log(progress.value)
     if(Date.now() >= start + time) {
       progress.value = 0;
       progress.style.display = "none";
@@ -1013,37 +996,27 @@ let animateSwap = () => {
     } else {
       progress.value += 1;
     }
-    
   },time/100)
 }
 
 
+
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ##
 // JUMPING
-// Add event listener for space bar keypress
-document.addEventListener("keydown", (event) => {
-  if (event.key === " " && !isJumping) { // Check for space bar press
-    jump();
-  }
-});
-
-// const jump = () => {
-//   PLAYER.body.position.y = 10;
-// }
-
-// Define the jump function
 function jump() {
   if(!isJumping) {
     isJumping = true;
     jumpStartTime = Date.now();
     PLAYER.body.velocity.y = 10;
-  
-
-
   }
 }
 
-// _________________________________________
-// Mouse controls
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// MOUSE/CAMERA CONTROLS
 const cameraRotation = new THREE.Euler(0, 0, 0, 'YXZ');
 let mouseState = {
     x: 0,
@@ -1052,30 +1025,24 @@ let mouseState = {
 };
 
 document.addEventListener('mousemove', (event) => {
-  if (!isInventoryOpen) {
-      
+  if (!isInventoryOpen) { 
     cameraRotation.x -= event.movementY * sensitivity;
     cameraRotation.y -= event.movementX * sensitivity;
     cameraRotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, cameraRotation.x));
     camera.rotation.copy(cameraRotation)
-      
   }
   mouseState.x = event.movementX;
   mouseState.y = event.movementY;
 });
 
 
-let canvas = document.querySelector("canvas");
-canvas.onclick = (e) => {
-  canvas.requestPointerLock = canvas.requestPointerLock || canvas.mozRequestPointerLock || canvas.webkitRequestPointerLock;
-  canvas.requestPointerLock();
-}
 
 
 
-// _________________________
-// projectile
 
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// PROJECTILES
+let canvas = document.getElementById("canvas");
 let removeProjectile = (projectile) => {
   let deleteAt = projectile.createdAt + projectile.removeAfterMS;
   if(deleteAt < Date.now()) { 
@@ -1086,8 +1053,9 @@ let removeProjectile = (projectile) => {
   } else { return false }
 }
 
+// is called to create every projectile regarless of weapon
+// Actual projectile is make in weapon class
 let projectiles = [];
-
 function createProjectile(player) {
   if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons && !isAlreadyDead) {
     player.weapon.removeAmmo(player);
@@ -1116,6 +1084,7 @@ function createProjectile(player) {
   }
 }
 
+// Is acalled every frame to move projectiles
 let update_projectiles = () => {
   for (let i = projectiles.length - 1; i >= 0; i--) {
     const projectile = projectiles[i];
@@ -1125,15 +1094,13 @@ let update_projectiles = () => {
         projectile.mesh.scale.add(new THREE.Vector3(projectile.rules.deltaSize,projectile.rules.deltaSize,projectile.rules.deltaSize));
         projectile.body.shapes[0] = new CANNON.Sphere(projectile.body.shapes[0].radius + (projectile.rules.deltaSize / 2));
         projectile.body.mass = projectile.body.mass + 0.6;
-        // logProperties(projectile.body)
       }
       if(projectile.rules.deltaSpeed) {// if given, change speed of projectile every frame
         projectile.body.velocity.mult(projectile.rules.deltaSpeed, projectile.body.velocity);
       }
     }
-    
     if(removeProjectile(projectile)) { // do after projectile is to be removed
-      if(projectile.callback) { projectile.callback(projectile.mesh, projectile.body, enemies, world ,damageEnemy); console.log(enemies) }
+      if(projectile.callback) { projectile.callback(projectile.mesh, projectile.body, enemies, world ,damageEnemy); }
       projectiles.splice(i, 1)
     } ;
   }
@@ -1146,13 +1113,9 @@ let logProperties = (object) => {
   console.log(`object velocities: x-${object.velocity.x} y-${object.velocity.y} z-${object.velocity.z}`)
 }
 
-document.addEventListener('click', () => {createProjectile(PLAYER)});
-
-
+// handle mouse clicks and holds for projectiles
 let isMouseHeldDown = false;
 let moveTimer;
-
-// Function to start moving the object forward at intervals
 function startContinuousMove() {
   moveTimer = setInterval(() => {
     if (isMouseHeldDown) {
@@ -1161,48 +1124,52 @@ function startContinuousMove() {
   }, moveInterval);
 }
 
-// Function to stop moving the object forward
 function stopContinuousMove() {
   clearInterval(moveTimer);
 }
 
-// Event listener for mouse down
 canvas.addEventListener('mousedown', () => {
   isMouseHeldDown = true;
   startContinuousMove();
 });
 
-// Event listener for mouse up
 canvas.addEventListener('mouseup', () => {
   isMouseHeldDown = false;
   stopContinuousMove();
 });
 
+document.addEventListener('click', () => {createProjectile(PLAYER)});
 
 
-let removeBodies = (body, i) => {
-  // console.log(enemies)
-  if(body) { 
-    world.remove(body)
-    bodiesToRemove.splice(i, 1);
-  }
+
+
+
+
+
+// ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
+// UTILITY FUNCTIONS
+// add functionality of all sorts
+
+let isDeathOpen = false;
+let isAlreadyDead = false;
+let gameover = document.getElementById("gameover");
+
+
+canvas.onclick = (e) => {
+  toggleCursorLock(true);
 }
 
-let removeMesh = (mesh, i) => {
-  if(mesh) {
-    scene.remove(mesh);
-    shapesToRemove.splice(i, 1);
-  }
+let printPlayerPosition = () => {
+  console.log("\nplayer's current location:");
+  console.log(`x: ${PLAYER.body.position.x}`);
+  console.log(`y: ${PLAYER.body.position.y}`);
+  console.log(`z: ${PLAYER.body.position.z}`);
+  console.log("-- -- -- -- -- -- --\n")
 }
 
-let saveWave = () => {
-  window.localStorage.setItem("player_data", JSON.stringify({
-    hp: PLAYER.hp,
-    inventory: PLAYER.inventory,
-    weapon: PLAYER.weapon,
-    secondary: PLAYER.secondary,
-    wave: wave
-  }))
+let removeItems = (item, i) => {
+  world.remove(item.body);
+  scene.remove(item.mesh);
 }
 
 let clearItems = () => {
@@ -1220,62 +1187,19 @@ let clearEnemies = () => {
   })
 }
 
-// update every frame
-let updateEnemyPhysics = () => {
-  Object.keys(enemies).forEach((key) => {
-    move_towards_player(enemies[key].mesh, enemies[key].body, enemies[key].moveSpeed)
-    enemies[key].mesh.position.copy(enemies[key].body.position);
-    enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
-  })
-
-  if(Object.keys(enemies).length < 1 && hasSpawned) {
-    wave += 1;
-    hasSpawned = false;
-    saveWave();
-    updateWave();
-    spawn();
+let removeBodies = (body, i) => {
+  if(body) { 
+    world.remove(body)
+    bodiesToRemove.splice(i, 1);
   }
 }
 
-let removeItems = (item, i) => {
-  world.remove(item.body);
-  scene.remove(item.mesh);
+let removeMesh = (mesh, i) => {
+  if(mesh) {
+    scene.remove(mesh);
+    shapesToRemove.splice(i, 1);
+  }
 }
-
-let updateItems = () => {
-  active_items.forEach((item, i) => {
-    item.item.mesh.position.copy(item.item.body.position);
-    item.item.mesh.rotation.y += 0.05;
-    item.item.mesh.rotation.z += 0.01;
-    if(item.item.toBeDeleted == true) {
-      removeItems(item.item)
-      active_items.splice(i, 1);
-    }
-  })
-
-  interactionMeshes.forEach((mesh, i) => {
-    mesh.mesh.position.copy(mesh.meshToTrack.position);
-    mesh.mesh.rotation.copy(mesh.meshToTrack.rotation)
-  })
-}
-
-let updateGame = () => {
-
-  // rampMesh.position.copy(rampBody.position);
-  // rampMesh.quaternion.copy(rampBody.quaternion);
-  
-  PLAYER.body.position.y += 0.004;
-  playerMesh.position.copy(PLAYER.body.position);
-  playerMesh.quaternion.copy(PLAYER.body.quaternion);
-
-  camera.position.copy(PLAYER.body.position);
-  camera.position.y += 2.5 //+ 40;
-}
-
-
-let isDeathOpen = false;
-let isAlreadyDead = false;
-let gameover = document.getElementById("gameover");
 
 let checkHP = () => {
   if(!isAlreadyDead) {
@@ -1297,23 +1221,68 @@ let checkHP = () => {
   } 
 }
 
+let saveWave = () => {
+  window.localStorage.setItem("player_data", JSON.stringify({
+    hp: PLAYER.hp,
+    inventory: PLAYER.inventory,
+    weapon: PLAYER.weapon,
+    secondary: PLAYER.secondary,
+    wave: wave
+  }))
+}
 
-// add console.logs
-setInterval(() => {
-  // console.log("\nBODY POSITION Y: ", PLAYER.body.position.y);
-  // console.log(PLAYER.body)
-  // console.log("VELOCITY: ",PLAYER.body.velocity);
-  // console.log("\nCAMERA", camera.position.y);
-  // console.log("FLOOR: ", floorBody.position);
-}, 3000);
 
+// ## ## ## ## ## ## ## ## ## ## ##
+// UPDATE FUNCTIONS
+// runs every frame to do all sorts of things
 
+let updateGame = () => {
+  PLAYER.body.position.y += 0.004;
+  playerMesh.position.copy(PLAYER.body.position);
+  playerMesh.quaternion.copy(PLAYER.body.quaternion);
 
+  camera.position.copy(PLAYER.body.position);
+  camera.position.y += 2.5 //+ 40;
+}
+
+let updateItems = () => {
+  active_items.forEach((item, i) => {
+    item.item.mesh.position.copy(item.item.body.position);
+    item.item.mesh.rotation.y += 0.05;
+    item.item.mesh.rotation.z += 0.01;
+    if(item.item.toBeDeleted == true) {
+      removeItems(item.item)
+      active_items.splice(i, 1);
+    }
+  })
+
+  interactionMeshes.forEach((mesh, i) => {
+    mesh.mesh.position.copy(mesh.meshToTrack.position);
+    mesh.mesh.rotation.copy(mesh.meshToTrack.rotation)
+  })
+}
+
+let updateEnemyPhysics = () => {
+  Object.keys(enemies).forEach((key) => {
+    move_towards_player(enemies[key].mesh, enemies[key].body, enemies[key].moveSpeed)
+    enemies[key].mesh.position.copy(enemies[key].body.position);
+    enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
+  })
+
+  if(Object.keys(enemies).length < 1 && hasSpawned) {
+    wave += 1;
+    hasSpawned = false;
+    saveWave();
+    updateWave();
+    spawn();
+  }
+}
+
+// create player wireframe
 let playerGeometry = new THREE.BoxGeometry(2,4,2);
 let playerMaterial = new THREE.MeshBasicMaterial({ color: 0xFE90C9, wireframe: true })
 let playerMesh = new THREE.Mesh(playerGeometry,playerMaterial);
 scene.add(playerMesh);
-
 
 // _________________________________________
 // ||||||||||||||||||||||||||||||||||||||||
@@ -1336,6 +1305,15 @@ const animate = () => {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 };
+
+// add console.logs
+setInterval(() => {
+  // console.log("\nBODY POSITION Y: ", PLAYER.body.position.y);
+  // console.log(PLAYER.body)
+  // console.log("VELOCITY: ",PLAYER.body.velocity);
+  // console.log("\nCAMERA", camera.position.y);
+  // console.log("FLOOR: ", floorBody.position);
+}, 3000);
 
 init();
 animate();

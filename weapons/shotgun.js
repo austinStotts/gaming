@@ -65,6 +65,7 @@ export default class Shotgun {
         this.number_of_pelets = 8;
         this.text = "very epic and very dangerous";
         [this.mesh, this.body] = makeWeapon();
+        this.body.userData.name = this.display_name;
     }
 
     reload (player) {

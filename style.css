@@ -5,7 +5,7 @@
     z-index: 100;
     -webkit-transform: translate(-50%, -50%);
     transform: translate(-50%, -50%);
-    border: 1px solid red;
+    border: 1px solid black;
     width: 10px;
     height: 10px;
     filter: invert(1);
@@ -594,4 +594,25 @@
 
 #jump-modifier-value {
     display: inline-block;
+}
+
+#interact-wrapper {
+    position: fixed;
+    top: 50%;
+    left: calc(50% + 80px);
+    z-index: 110;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    font-family: monospace;
+    color: crimson;
+}
+
+.interact-key {
+    display: inline;
+}
+
+.interact-label {
+    color: dodgerblue;
+    display: inline;
+    font-size: 16px;
 }
