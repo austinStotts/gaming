@@ -36,6 +36,7 @@ export default class Pea_Shooter {
         this.inMagazine = inMagazine;
         // this.inReserve = 0;
         this.ammo_id = 'small_ammo';
+        this.ammo_name = "small ammo";
         this.reloadTime = 800; // in milliseconds
         this.removeAfterMS = 3000; // in milliseconds
         this.projectile_speed = 100; // in milliseconds

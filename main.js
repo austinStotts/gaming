@@ -16,6 +16,8 @@ import makeDoor from './helpers/makeDoor.js';
 import map_functions from "./map.js";
 import waves from "./waves.js";
 
+import Door from './constructs/door.js';
+
 import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
 import shotgun_ammo from './items/shotgun_ammo.js'
@@ -23,6 +25,7 @@ import energy_ammo from './items/energy_ammo.js';
 import Pulse_Bomb from './weapons/pulse_bomb.js';
 import Shotgun from './weapons/shotgun.js';
 import Rifle from './weapons/rifle.js';
+import Key from './items/key.js';
 
 
 
@@ -454,6 +457,9 @@ let updateInventory = () => {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
       cell.childNodes[0].src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`
     } else {
+      // if(cell == undefined) {
+      //   console.log("WE GOT AN UNDEFINED")
+      // }
       if(cell.childNodes.length>0) { // remove in backwards order
         cell.removeChild(cell.childNodes[2])
         cell.removeChild(cell.childNodes[1])
@@ -638,9 +644,10 @@ let dropItem = (item, position) => { // put item at any location
 dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
 dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
 dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
+dropItem(new Key('0001', "key to the storage room"), new CANNON.Vec3(0, 13, 10))
 
 // dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
-dropItem(shotgun, new CANNON.Vec3(0, 13, -6))
+dropItem(shotgun, new CANNON.Vec3(-77,13,36))
 
 // dropItem(rfl, new CANNON.Vec3(2,1,2))
 // dropItem(pb, new CANNON.Vec3(4,1,4))
@@ -683,16 +690,45 @@ let build = (position, angle, options) => {
   scene.add(roomGroup);
 }
 
-let [doorMesh, doorBody] = makeDoor(5, 12);
-doorBody.position.set(-49.8, 18, 32.5);
-doorMesh.position.copy(doorBody.position)
-doorBody.userData.isInteractable = true;
-doorBody.userData.name = "locked door";
-scene.add(doorMesh);
-world.addBody(doorBody);
-console.log(doorBody)
 
-map_functions.forEach(args => { build(args[0], args[1], args[2]) })
+
+let constructs = [];
+
+// 0        1            2         3
+// class - class args - location - name
+let buildConstructs = (construct) => {
+  console.log(construct)
+  let con = new construct.class(construct.args[0],construct.args[1],construct.args[2],construct.args[3]);
+  con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
+  con.mesh.position.copy(con.body.position);
+  con.body.userData.isInteractable = true;
+  con.body.userData.name = construct.name;
+  con.body.userData.construct_id = construct.args[2];
+  constructs.push({construct_id: construct.args[2], object: con});
+  scene.add(con.mesh);
+  world.addBody(con.body);
+}
+
+// ## ## ## ## ##
+// DOOR TESTING
+
+
+
+
+// let doorid = "0001";
+// let door_one = new Door(5, 12, doorid, true);
+// door_one.body.position.set(-49.8, 18, 32.5);
+// door_one.mesh.position.copy(door_one.body.position)
+// door_one.body.userData.isInteractable = true;
+// door_one.body.userData.name = "locked door";
+// door_one.body.userData.construct_id = doorid;
+// constructs.push({construct_id: doorid, object: door_one})
+// scene.add(door_one.mesh);
+// world.addBody(door_one.body);
+// console.log(door_one.body);
+
+map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) })
+map_functions.world_1.constructs.forEach(args => { buildConstructs(args) })
 // position, rotation, options
 
 
@@ -804,6 +840,7 @@ let checkInteractable = () => {
   let raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
   let intersections = raycast.intersectObjects(scene.children);
   if(intersections.length > 0) {
+    // console.log(intersections);
     if(intersections[0].object.userData.isInteractable) {
       let time = Date.now();
       let edgeMesh = intersections[0].object.userData.edgeMesh;
@@ -836,6 +873,15 @@ let interact = () => {
             let weapon;
             for(let i = 0; i < active_items.length; i++) { if(active_items[i].createdAt == body.userData.timecode) { weapon = active_items[i].item }}
             giveWeapon(weapon);
+          }
+          else if(body.userData.collisionClass == "door") {
+            for(let i = 0; i < constructs.length; i++) {
+              if(constructs[i].construct_id == body.userData.construct_id) {
+                if(constructs[i].object.unlock(PLAYER)) {
+                  updateInventory();
+                }
+              }
+            }
           }
       }
   }
@@ -1278,6 +1324,15 @@ let updateEnemyPhysics = () => {
   }
 }
 
+let updateConstructs = () => {
+  for(let i = 0; i < constructs.length; i++) {
+    if(constructs[i].object.toBeDeleted) {
+      scene.remove(constructs[i].object.mesh);
+      world.remove(constructs[i].object.body);
+    }
+  }
+}
+
 // create player wireframe
 let playerGeometry = new THREE.BoxGeometry(2,4,2);
 let playerMaterial = new THREE.MeshBasicMaterial({ color: 0xFE90C9, wireframe: true })
@@ -1298,6 +1353,7 @@ const animate = () => {
   updateGame();
   updateItems();
   checkHP();
+  updateConstructs();
 
   bodiesToRemove.forEach(removeBodies);
   meshToRemove.forEach(removeMesh);

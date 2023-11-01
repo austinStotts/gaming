@@ -365,6 +365,11 @@
     margin: 4px;
 }
 
+.red {
+    color: crimson;
+    font-size: 15px;
+}
+
 .white {
     color: white;
     text-shadow: 0px 0px 0px 3px black;

@@ -26,9 +26,14 @@ export default (width, height, rotate90=false) => {
   const doorBody = new CANNON.Body({shape: doorShape, mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
   doorBody.userData = { collisionClass: 'door', mesh: doorMesh }
 
-  if(rotate90) { doorMesh.rotateY(Math.PI / 2) }
-//   doorBody.position.set(new CANNON.Vec3(0, 0, 0));
-//   doorMesh.position.copy(doorBody.position);
+  let edgeGeo = new THREE.EdgesGeometry(wallGeometry);
+  var edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff }); // You can customize the color and linewidth
+  var edgeMesh = new THREE.LineSegments(edgeGeo, edgeMat);
+
+  doorMesh.userData.edgeMesh = edgeMesh;
+  doorMesh.userData.isInteractable = true;
+  doorMesh.userData.physicsBody = doorBody;
+  if(rotate90) { doorMesh.rotateX(Math.PI / 2) }
   doorBody.quaternion.copy(doorMesh.quaternion);
 
   return [doorMesh, doorBody]
