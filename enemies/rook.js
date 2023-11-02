@@ -7,7 +7,7 @@ import shotgun_ammo from "../items/shotgun_ammo";
 
 let makeRook = (l) => {
     let geometry = new THREE.SphereGeometry(3);
-    let material = new THREE.MeshBasicMaterial({ color: 0x005599 });
+    let material = new THREE.MeshStandardMaterial({ color: 0x005599 });
     let mesh = new THREE.Mesh(geometry, material);
 
     let bodyShape = new CANNON.Sphere(3);

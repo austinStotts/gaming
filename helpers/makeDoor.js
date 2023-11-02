@@ -19,7 +19,7 @@ export default (width, height, rotate90=false) => {
   // const material = 
 
   const wallGeometry = new THREE.BoxGeometry(thickness*2, height, width);
-  const wallMaterial = new THREE.MeshBasicMaterial({ map: texture });
+  const wallMaterial = new THREE.MeshStandardMaterial({ map: texture });
   let doorMesh = new THREE.Mesh(wallGeometry, wallMaterial);
 
   const doorShape = new CANNON.Box(new CANNON.Vec3(thickness / 2, height / 2, width / 2));
@@ -33,7 +33,7 @@ export default (width, height, rotate90=false) => {
   doorMesh.userData.edgeMesh = edgeMesh;
   doorMesh.userData.isInteractable = true;
   doorMesh.userData.physicsBody = doorBody;
-  if(rotate90) { doorMesh.rotateX(Math.PI / 2) }
+  if(rotate90) { doorMesh.rotateY(-Math.PI/2) }
   doorBody.quaternion.copy(doorMesh.quaternion);
 
   return [doorMesh, doorBody]

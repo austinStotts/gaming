@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
+import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import makeMesh from "./helpers/makeMesh.js";
@@ -54,6 +55,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
+let turnOffSpawn = false;
 
 
 
@@ -346,7 +348,12 @@ const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerH
 camera.position.set(2,5,0);
 // ## ## ## ## ## ## ## ##
 // Renderer
-const renderer = new THREE.WebGLRenderer();
+const renderer = new THREE.WebGLRenderer({
+	powerPreference: "high-performance",
+	antialias: true,
+	stencil: false,
+	depth: false,
+});
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.getContext().linewidth = 6;
 document.body.appendChild(renderer.domElement);
@@ -658,14 +665,25 @@ dropItem(shotgun, new CANNON.Vec3(-77,13,36))
 // dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
 
 
-
-
 // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // WORLD GEN
 
-const light = new THREE.AmbientLight( 0x404040 ); // soft white light
-light.position.set(0,30,0)
-scene.add( light );
+// const light = new THREE.AmbientLight( 0x404040, 25 ); // soft white light
+// light.position.set(0,14,-7)
+// scene.add( light );
+
+var l1 = new THREE.PointLight(0x707070, 25, 100, 0.5);
+l1.position.set(0, 30, -45);
+scene.add(l1);
+var l2 = new THREE.PointLight(0x707070, 25, 100, 0.5);
+l2.position.set(0, 30, 35);
+scene.add(l2);
+var l3 = new THREE.PointLight(0x707070, 10, 100, 0.5);
+l3.position.set(-90, 30, 30);
+scene.add(l3);
+// var l4 = new THREE.PointLight(0x707070, 10, 100, 0.5);
+// l4.position.set(-8, 24, -39);
+// scene.add(l4);
 
 let build = (position, angle, options) => {
   let roomGroup = makeRoom(position, options);
@@ -690,6 +708,31 @@ let build = (position, angle, options) => {
   scene.add(roomGroup);
 }
 
+let buildCeilings = (position, angle, options) => {
+      // CEILINGS
+      options.textureOveride = "../ceiling.jpg"
+      let ceilingGroup = makeRoom(position, options);
+      ceilingGroup.traverse((mesh) => {
+        if(mesh.isMesh && mesh.userData.physicsBody != undefined) {
+          let body = mesh.userData.physicsBody;
+          function rotateObject(object, axis, angle) {
+            let quaternion = new THREE.Quaternion().setFromAxisAngle(axis.normalize(), angle);
+            object.quaternion.multiplyQuaternions(quaternion, object.quaternion);
+            let inverseQuaternion = quaternion.clone().conjugate();
+            object.position.applyQuaternion(inverseQuaternion);
+    
+            body.position.copy(object.position);
+            body.quaternion.copy(object.quaternion)
+          }
+    
+          let axis = new THREE.Vector3(0, 1, 0);
+          rotateObject(mesh, axis, angle);
+          world.addBody(body);
+        }
+      })
+      scene.add(ceilingGroup);
+}
+
 
 
 let constructs = [];
@@ -698,7 +741,7 @@ let constructs = [];
 // class - class args - location - name
 let buildConstructs = (construct) => {
   console.log(construct)
-  let con = new construct.class(construct.args[0],construct.args[1],construct.args[2],construct.args[3]);
+  let con = new construct.class(construct.args[0],construct.args[1],construct.args[2],construct.args[3], construct.args[4]);
   con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
   con.mesh.position.copy(con.body.position);
   con.body.userData.isInteractable = true;
@@ -727,8 +770,9 @@ let buildConstructs = (construct) => {
 // world.addBody(door_one.body);
 // console.log(door_one.body);
 
-map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) })
-map_functions.world_1.constructs.forEach(args => { buildConstructs(args) })
+map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
+map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
+map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
 // position, rotation, options
 
 
@@ -777,20 +821,25 @@ let enemyCollision = (event) => {
 
 let hasSpawned = false;
 let spawn = () => {
-  let thisWave = waves[wave];
-  
-  if(thisWave) {
-    for(let i = 0; i < thisWave.enemies.length; i++) {
-      let mesh = thisWave.enemies[i].mesh;
-      let body = thisWave.enemies[i].body;
-      body.addEventListener('collide', enemyCollision);
-      scene.add(mesh);
-      world.addBody(body);
-      body.userData.id = `${wave}_${i}_${thisWave.enemies[i].class}`
-      enemies[`${wave}_${i}_${thisWave.enemies[i].class}`] = thisWave.enemies[i];
+  if(!turnOffSpawn) {
+    let thisWave = waves[wave];
+    
+    if(thisWave != undefined) {
+      for(let i = 0; i < thisWave.enemies.length; i++) {
+        let mesh = thisWave.enemies[i].mesh;
+        let body = thisWave.enemies[i].body;
+        body.addEventListener('collide', enemyCollision);
+        scene.add(mesh);
+        world.addBody(body);
+        body.userData.id = `${wave}_${i}_${thisWave.enemies[i].class}`
+        enemies[`${wave}_${i}_${thisWave.enemies[i].class}`] = thisWave.enemies[i];
+      }
+    } else {
+      turnOffSpawn = true;
     }
     hasSpawned = true;
   }
+  // hasSpawned = false;
 }
 
 let removeEnemy = (id) => {
@@ -1339,6 +1388,13 @@ let playerMaterial = new THREE.MeshBasicMaterial({ color: 0xFE90C9, wireframe: t
 let playerMesh = new THREE.Mesh(playerGeometry,playerMaterial);
 scene.add(playerMesh);
 
+// ## ## ## ## ## ## ## ## ##
+// POSTPROCESSING
+
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+composer.addPass(new EffectPass(camera, new BloomEffect()));
+
 // _________________________________________
 // ||||||||||||||||||||||||||||||||||||||||
 // Animation loop
@@ -1360,6 +1416,7 @@ const animate = () => {
     
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
+  composer.render()
 };
 
 // add console.logs

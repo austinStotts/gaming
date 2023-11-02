@@ -6,7 +6,7 @@ import shotgun_ammo from "../items/shotgun_ammo";
 
 let makePawn = (l) => {
     let geometry = new THREE.BoxGeometry(2, 2, 2);
-    let material = new THREE.MeshBasicMaterial({ color: 0x674EA7, wireframe: false, transparent: false });
+    let material = new THREE.MeshStandardMaterial({ color: 0x674EA7, wireframe: false, transparent: false });
     let mesh = new THREE.Mesh(geometry, material);
 
     let shape = new CANNON.Box(new CANNON.Vec3(1.25, 1.25, 1.25));

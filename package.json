@@ -16,6 +16,7 @@
   "dependencies": {
     "cannon": "^0.6.2",
     "convex-hull": "^1.0.3",
+    "postprocessing": "^6.33.3",
     "three": "^0.156.1"
   }
 }

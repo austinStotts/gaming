@@ -18,16 +18,21 @@ export default class Door {
     }
 
     unlock (player) {
-        for(let i = 0; i < player.inventory.length; i++) {
-            if(player.inventory[i] != undefined) {
-                if(player.inventory[i].id == "key") {
-                    if(player.inventory[i].lock_id == this.lock_id) {
-                        player.inventory[i] = undefined;
-                        this.toBeDeleted = true;
-                        return true;
+        if(this.islocked) {
+            for(let i = 0; i < player.inventory.length; i++) {
+                if(player.inventory[i] != undefined) {
+                    if(player.inventory[i].id == "key") {
+                        if(player.inventory[i].lock_id == this.lock_id) {
+                            player.inventory[i] = undefined;
+                            this.toBeDeleted = true;
+                            return true;
+                        }
                     }
                 }
             }
+        } else {
+            this.toBeDeleted = true;
+            return true;
         }
         return false;
     }
