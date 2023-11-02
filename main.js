@@ -18,6 +18,7 @@ import map_functions from "./map.js";
 import waves from "./waves.js";
 
 import Door from './constructs/door.js';
+import Lantern from "./constructs/lantern.js";
 
 import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
@@ -741,15 +742,23 @@ let constructs = [];
 // class - class args - location - name
 let buildConstructs = (construct) => {
   console.log(construct)
-  let con = new construct.class(construct.args[0],construct.args[1],construct.args[2],construct.args[3], construct.args[4]);
-  con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
-  con.mesh.position.copy(con.body.position);
-  con.body.userData.isInteractable = true;
-  con.body.userData.name = construct.name;
-  con.body.userData.construct_id = construct.args[2];
+  let con = new construct.class(...construct.args);
+  
+  if(con.body == undefined) { 
+    con.mesh.position.set(construct.location[0], construct.location[1], construct.location[2]) 
+  } else {
+    con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
+    con.mesh.position.copy(con.body.position);
+    con.body.userData.isInteractable = true;
+    con.body.userData.name = construct.name;
+    con.body.userData.construct_id = construct.args[2];
+    world.addBody(con.body);
+  }
+  
+
   constructs.push({construct_id: construct.args[2], object: con});
   scene.add(con.mesh);
-  world.addBody(con.body);
+  
 }
 
 // ## ## ## ## ##
