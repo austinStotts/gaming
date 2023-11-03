@@ -789,40 +789,48 @@ let buildConstructs = (construct) => {
 // map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
 
 let rotate = true;
-let [stair, bodies] = makeRamp(10, 12, rotate);
-// stair.position.z = 5;
-console.log(stair)
-scene.add(stair);
-// console.log(bodies);
-// stair.children.forEach((tread, i) => { tread.position.copy(bodies[i].position) })
-bodies.forEach((body, i) => { 
-  console.log(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
-  console.log(stair.children[i].position.x, stair.children[i].position.y, stair.children[i].position.z)
-  body.addEventListener("collide", (event) => {
-    if(event.target.userData.collisionClass == "player") {
-      
-      let upwardVelocityLimit = 0.15;
-      let pBody = event.target;
-      console.log("1", pBody)
-      if (pBody.velocity.y > upwardVelocityLimit) {
-        pBody.velocity.y = upwardVelocityLimit;
-      }
-    } else if(event.body.userData.collisionClass == "player") {
-      let upwardVelocityLimit = 0.15;
-      let pBody = event.body;
-      console.log("2", pBody)
-      if (pBody.velocity.y > upwardVelocityLimit) {
-        pBody.velocity.y = upwardVelocityLimit;
-      }
-    }
+let [stairMeshes, stairBodies] = makeRamp(10, 12, 1, new CANNON.Vec3(0,0,-10));
 
-  })
-  // body.position.copy(stair.children[i].position)
-  // body.position.z += 5; 
-  // body.rota(new THREE.Vector3(0,1,0), (Math.PI))
-  body.position.y -= 0.2;
-  world.addBody(body);
-})
+
+for(let i = 0; i < stairMeshes.length; i++) {
+
+  scene.add(stairMeshes[i]);
+  world.add(stairBodies[i])
+}
+
+// stair.position.z = 5;
+// console.log(stair)
+// scene.add(stair);
+// // console.log(bodies);
+// // stair.children.forEach((tread, i) => { tread.position.copy(bodies[i].position) })
+// bodies.forEach((body, i) => { 
+//   console.log(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
+//   console.log(stair.children[i].position.x, stair.children[i].position.y, stair.children[i].position.z)
+//   body.addEventListener("collide", (event) => {
+//     if(event.target.userData.collisionClass == "player") {
+      
+//       let upwardVelocityLimit = 0.15;
+//       let pBody = event.target;
+//       console.log("1", pBody)
+//       if (pBody.velocity.y > upwardVelocityLimit) {
+//         pBody.velocity.y = upwardVelocityLimit;
+//       }
+//     } else if(event.body.userData.collisionClass == "player") {
+//       let upwardVelocityLimit = 0.15;
+//       let pBody = event.body;
+//       console.log("2", pBody)
+//       if (pBody.velocity.y > upwardVelocityLimit) {
+//         pBody.velocity.y = upwardVelocityLimit;
+//       }
+//     }
+
+//   })
+//   // body.position.copy(stair.children[i].position)
+//   // body.position.z += 5; 
+//   // body.rota(new THREE.Vector3(0,1,0), (Math.PI))
+//   body.position.y -= 0.2;
+//   world.addBody(body);
+// })
 
 // position, rotation, options
 
