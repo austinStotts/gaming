@@ -56,7 +56,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
-let turnOffSpawn = false;
+let turnOffSpawn = true;
 
 
 
@@ -395,11 +395,16 @@ floorBody.collisionFilterMask = -1;
 // CREATE PLAYER BODY
 let create_player_body = (player) => {
   let shape = new CANNON.Box(new CANNON.Vec3(1,2,1));
+  let playerMaterial = new CANNON.Material("playerMaterial");
+  playerMaterial.friction = 0.0;
+  playerMaterial.restitution = 0;
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
+  playerBody.material = playerMaterial;
   playerBody.position.set(0,14,0);
   playerBody.collisionFilterGroup = 1;
   playerBody.collisionFilterMask = 1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
+  console.log(playerBody)
   playerBody.addEventListener("collide", playerCollision)
   player.set_body(playerBody)
   world.addBody(playerBody);
@@ -673,15 +678,15 @@ dropItem(shotgun, new CANNON.Vec3(-77,13,36))
 // light.position.set(0,14,-7)
 // scene.add( light );
 
-var l1 = new THREE.PointLight(0x707070, 25, 100, 0.5);
-l1.position.set(0, 30, -45);
-scene.add(l1);
-var l2 = new THREE.PointLight(0x707070, 25, 100, 0.5);
-l2.position.set(0, 30, 35);
-scene.add(l2);
-var l3 = new THREE.PointLight(0x707070, 10, 100, 0.5);
-l3.position.set(-90, 30, 30);
-scene.add(l3);
+// var l1 = new THREE.PointLight(0x707070, 25, 100, 0.5);
+// l1.position.set(0, 30, -45);
+// scene.add(l1);
+// var l2 = new THREE.PointLight(0x707070, 25, 100, 0.5);
+// l2.position.set(0, 30, 35);
+// scene.add(l2);
+// var l3 = new THREE.PointLight(0x707070, 10, 100, 0.5);
+// l3.position.set(-90, 30, 30);
+// scene.add(l3);
 // var l4 = new THREE.PointLight(0x707070, 10, 100, 0.5);
 // l4.position.set(-8, 24, -39);
 // scene.add(l4);
@@ -741,9 +746,9 @@ let constructs = [];
 // 0        1            2         3
 // class - class args - location - name
 let buildConstructs = (construct) => {
-  console.log(construct)
+  // console.log(construct)
   let con = new construct.class(...construct.args);
-  
+  if(construct.class == Door) { con.lock_id = construct.id };
   if(con.body == undefined) { 
     con.mesh.position.set(construct.location[0], construct.location[1], construct.location[2]) 
   } else {
@@ -751,12 +756,12 @@ let buildConstructs = (construct) => {
     con.mesh.position.copy(con.body.position);
     con.body.userData.isInteractable = true;
     con.body.userData.name = construct.name;
-    con.body.userData.construct_id = construct.args[2];
+    con.body.userData.construct_id = construct.id;
     world.addBody(con.body);
   }
   
 
-  constructs.push({construct_id: construct.args[2], object: con});
+  constructs.push({construct_id: construct.id, object: con});
   scene.add(con.mesh);
   
 }
@@ -779,9 +784,46 @@ let buildConstructs = (construct) => {
 // world.addBody(door_one.body);
 // console.log(door_one.body);
 
-map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
-map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
-map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
+// map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
+// map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
+// map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
+
+let rotate = true;
+let [stair, bodies] = makeRamp(10, 12, rotate);
+// stair.position.z = 5;
+console.log(stair)
+scene.add(stair);
+// console.log(bodies);
+// stair.children.forEach((tread, i) => { tread.position.copy(bodies[i].position) })
+bodies.forEach((body, i) => { 
+  console.log(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
+  console.log(stair.children[i].position.x, stair.children[i].position.y, stair.children[i].position.z)
+  body.addEventListener("collide", (event) => {
+    if(event.target.userData.collisionClass == "player") {
+      
+      let upwardVelocityLimit = 0.15;
+      let pBody = event.target;
+      console.log("1", pBody)
+      if (pBody.velocity.y > upwardVelocityLimit) {
+        pBody.velocity.y = upwardVelocityLimit;
+      }
+    } else if(event.body.userData.collisionClass == "player") {
+      let upwardVelocityLimit = 0.15;
+      let pBody = event.body;
+      console.log("2", pBody)
+      if (pBody.velocity.y > upwardVelocityLimit) {
+        pBody.velocity.y = upwardVelocityLimit;
+      }
+    }
+
+  })
+  // body.position.copy(stair.children[i].position)
+  // body.position.z += 5; 
+  // body.rota(new THREE.Vector3(0,1,0), (Math.PI))
+  body.position.y -= 0.2;
+  world.addBody(body);
+})
+
 // position, rotation, options
 
 
@@ -1347,6 +1389,11 @@ let updateGame = () => {
 
   camera.position.copy(PLAYER.body.position);
   camera.position.y += 2.5 //+ 40;
+
+  let playerGravity = new CANNON.Vec3(0, -500, 0);
+  let gravityForce = new CANNON.Vec3();
+  PLAYER.body.vectorToWorldFrame(playerGravity, gravityForce);
+  PLAYER.body.applyForce(gravityForce, PLAYER.body.position);
 }
 
 let updateItems = () => {
@@ -1400,9 +1447,9 @@ scene.add(playerMesh);
 // ## ## ## ## ## ## ## ## ##
 // POSTPROCESSING
 
-const composer = new EffectComposer(renderer);
-composer.addPass(new RenderPass(scene, camera));
-composer.addPass(new EffectPass(camera, new BloomEffect()));
+// const composer = new EffectComposer(renderer);
+// composer.addPass(new RenderPass(scene, camera));
+// composer.addPass(new EffectPass(camera, new BloomEffect()));
 
 // _________________________________________
 // ||||||||||||||||||||||||||||||||||||||||
@@ -1425,13 +1472,13 @@ const animate = () => {
     
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
-  composer.render()
+  // composer.render()
 };
 
 // add console.logs
 setInterval(() => {
   // console.log("\nBODY POSITION Y: ", PLAYER.body.position.y);
-  // console.log(PLAYER.body)
+  // console.log("FORCE:", PLAYER.body.force)
   // console.log("VELOCITY: ",PLAYER.body.velocity);
   // console.log("\nCAMERA", camera.position.y);
   // console.log("FLOOR: ", floorBody.position);

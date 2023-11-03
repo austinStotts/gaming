@@ -4,7 +4,7 @@ import * as CANNON from "cannon";
 import makeDoor from '../helpers/makeDoor';
 
 export default class Door {
-    constructor(width, height, lock_id, islocked=false, rotate90=false) {
+    constructor(width, height, islocked=false, rotate90=false, lock_id) {
         this.width = width;
         this.height = height;
         this.id = "key"

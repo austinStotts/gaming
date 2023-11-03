@@ -19,7 +19,7 @@ export default (width, height, rotate90=false) => {
   // const material = 
 
   const wallGeometry = new THREE.BoxGeometry(thickness*2, height, width);
-  const wallMaterial = new THREE.MeshStandardMaterial({ map: texture });
+  const wallMaterial = new THREE.MeshPhongMaterial({ map: texture, opacity: 1, transparent: false });
   let doorMesh = new THREE.Mesh(wallGeometry, wallMaterial);
 
   const doorShape = new CANNON.Box(new CANNON.Vec3(thickness / 2, height / 2, width / 2));

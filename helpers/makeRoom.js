@@ -25,7 +25,7 @@ export default (position, options) => {
     floorTexture.repeat.set(repeatXf, repeatYf);
 
     const floorGeometry = new THREE.BoxGeometry(width, depth, 0.1);
-    const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTexture });
+    const floorMaterial = new THREE.MeshPhongMaterial({ map: floorTexture, opacity: 1, transparent: false });
     const floorMesh = new THREE.Mesh(floorGeometry, floorMaterial);
     floorMesh.rotation.x = -Math.PI / 2; // Rotate the floor to be horizontal
     floorMesh.position.set(0 + position.x, 0 + position.y, (depth / 2) + position.z);
@@ -58,7 +58,7 @@ export default (position, options) => {
   // const material = 
 
   const wallGeometry = new THREE.BoxGeometry(wallThickness*2, height, depth);
-  const wallMaterial = new THREE.MeshStandardMaterial({ map: texture });
+  const wallMaterial = new THREE.MeshPhongMaterial({ map: texture, opacity: 1, transparent: false });
 
 
   if(options.walls.leftwall) {
