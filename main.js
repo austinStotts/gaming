@@ -285,7 +285,8 @@ let updateWave = () => {
 
 let handleDMG = (enemy, player) => {
   player.take_damage(enemy.damage);
-  updateHP(player)
+  updateHP(player);
+  showDamage();
 }
 
 let getWeapon = (id) => {
@@ -438,6 +439,7 @@ let playerCollision = (event) => {
   else if(event.body.userData.collisionClass == "enemyProjectile" || event.target.userData.collisionClass == "enemyProjectile") {
     console.log("HIT BY ENEMY");
     PLAYER.take_damage(event.body.userData.damage || event.target.userData.damage);
+    showDamage();
     updateHP(PLAYER);
   }
   // if(event.body.userData.collisionClass != "floor") { console.log(event) }
@@ -1483,6 +1485,9 @@ let updateEnemyPhysics = () => {
   if(Object.keys(enemies).length < 1 && hasSpawned) {
     wave += 1;
     hasSpawned = false;
+    if(waves[wave].modifier) {
+      turnOffSpawn = true;
+    }
     saveWave();
     animateWaveChange();
     setTimeout(() => {
@@ -1490,6 +1495,16 @@ let updateEnemyPhysics = () => {
       spawn();
     }, 5000)
   }
+}
+
+let showDamage = () => {
+  let damage = document.getElementById("damage");
+  damage.classList.add("damage");
+  damage.hidden = false;
+  setTimeout(() => {
+    damage.classList.remove("damage");
+    damage.hidden = true;
+  }, 500);
 }
 
 let keepBishopsUpright = () => {

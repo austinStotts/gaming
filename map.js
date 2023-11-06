@@ -46,7 +46,7 @@ export default {
         ],
         constructs: [
             {class: Door, id: "0001", args: [5, 12, true, false], location: [-49.95, 18, 32.5], name: "locked door" },
-            {class: Door, id: "0002", args: [10, 12, false, true], location: [-45, 18, 90], name: "door - open at own risk" },
+            {class: Door, id: "0002", args: [10, 12, false, true], location: [-45, 18, 90], name: "door - open when ready" },
             {class: Door, id: "0003", args: [10, 12, true, false], location: [35, 18, -5], name: "locked door" },
             {class: Lantern, id: "lamp", args: [0x857070, 25, 0.75, ], location: [-8, 23, 29], name: "lantern"},
             {class: Lantern, id: "lamp", args: [0x857070, 25, 0.75, ], location: [8, 23, 29], name: "lantern"},
