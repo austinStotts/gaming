@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
-import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
+// import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import makeMesh from "./helpers/makeMesh.js";
@@ -19,6 +19,7 @@ import waves from "./waves.js";
 
 import Door from './constructs/door.js';
 import Lantern from "./constructs/lantern.js";
+import Stairs from './constructs/stairs.js';
 
 import Health_pack from "./items/health_pack.js";
 import small_ammo from './items/small_ammo.js';
@@ -63,18 +64,40 @@ let turnOffSpawn = true;
 
 // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // FUNCTIONS FOR CHANGING GAME SETTING FROM CONSOLE
+
+
+
 window.speed = (n=0.25) => {
   if(typeof n == "number") {
-    speed = n;
-    return (`speed updated to: ${n}`);
-  } else { return ("invalid speed value") }
+    PLAYER.speed = n;
+    console.log(`
+    speed updated to: ${n}
+    default: 60
+    `);
+  } else { console.log("invalid speed value") }
 }
 
 window.sens = (n=0.0002) => {
   if(typeof n == "number") {
     sensitivity = n;
-    return (`sensitivity updated to: ${n}`);
-  } else { return ("invalid sensitivity value") }
+    console.log(`
+    sensitivity updated to: ${n}
+    default: 0.0002
+    `);
+  } else { console.log("invalid sensitivity value") }
+}
+
+
+let availableMethods = [window.speed, window.sens]
+window.help = () => {
+  console.log(`
+  hello
+  this is the developer console
+
+  you can use this to interact with the game world in some interesting ways
+
+  ${availableMethods.forEach(m => m)}
+  `)
 }
 
 // window.position = (x, y, z) => {
@@ -290,7 +313,7 @@ let init = () => {
 }
 
 // ## ## ## ## ## ## ## ## ## ## ##
-// RETET GAME WORLD
+// RESET GAME WORLD
 document.getElementById("try-again").addEventListener("click", () => { reset() })
 let reset = () => {
   if(window.localStorage.getItem("player_data") != undefined) { // IF PROGRESS HAS BEEN SAVED ALREADY
@@ -351,9 +374,9 @@ camera.position.set(2,5,0);
 // Renderer
 const renderer = new THREE.WebGLRenderer({
 	powerPreference: "high-performance",
-	antialias: true,
-	stencil: false,
-	depth: false,
+	// antialias: false,
+	// stencil: false,
+	// depth: false,
 });
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.getContext().linewidth = 6;
@@ -748,9 +771,27 @@ let constructs = [];
 let buildConstructs = (construct) => {
   // console.log(construct)
   let con = new construct.class(...construct.args);
-  if(construct.class == Door) { con.lock_id = construct.id };
-  if(con.body == undefined) { 
-    con.mesh.position.set(construct.location[0], construct.location[1], construct.location[2]) 
+  if(construct.class == Stairs) {
+    for(let i = 0; i < con.mesh.length; i++) {
+
+      scene.add(con.mesh[i]);
+      world.add(con.body[i]);
+    }
+    
+  }
+  else if(construct.class == Door) { 
+    con.lock_id = construct.id;
+    con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
+    con.mesh.position.copy(con.body.position);
+    con.body.userData.isInteractable = true;
+    con.body.userData.name = construct.name;
+    con.body.userData.construct_id = construct.id;
+    world.addBody(con.body);
+    scene.add(con.mesh);
+  }
+  else if(construct.class == Lantern) { 
+    con.mesh.position.set(construct.location[0], construct.location[1], construct.location[2]);
+    scene.add(con.mesh);
   } else {
     con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
     con.mesh.position.copy(con.body.position);
@@ -762,7 +803,6 @@ let buildConstructs = (construct) => {
   
 
   constructs.push({construct_id: construct.id, object: con});
-  scene.add(con.mesh);
   
 }
 
@@ -784,19 +824,15 @@ let buildConstructs = (construct) => {
 // world.addBody(door_one.body);
 // console.log(door_one.body);
 
-// map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
-// map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
-// map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
+map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
+map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
+map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
 
-let rotate = true;
-let [stairMeshes, stairBodies] = makeRamp(10, 12, 1, new CANNON.Vec3(0,0,-10));
+// let rotate = true;
+// let [stairMeshes, stairBodies] = makeRamp(10, 12, 2, new CANNON.Vec3(0,0,-10));
 
 
-for(let i = 0; i < stairMeshes.length; i++) {
 
-  scene.add(stairMeshes[i]);
-  world.add(stairBodies[i])
-}
 
 // stair.position.z = 5;
 // console.log(stair)
@@ -1163,7 +1199,7 @@ function jump() {
   if(!isJumping) {
     isJumping = true;
     jumpStartTime = Date.now();
-    PLAYER.body.velocity.y = 10;
+    PLAYER.body.velocity.y = (10 * PLAYER.jump_multiplier);
   }
 }
 

@@ -7,6 +7,9 @@ export default (position, options) => {
   let depth = options.d;
   let color = options.color;
 
+  let wallBodyMaterial = new CANNON.Material("wallBodyMaterial");
+  wallBodyMaterial.friction = 0.4;
+  wallBodyMaterial.restitution = 0;
 
   // Three.js setup
   const roomGroup = new THREE.Group();
@@ -14,7 +17,7 @@ export default (position, options) => {
   // Create floor
   if(options.walls.floor) {
     const floorTextureLoader = new THREE.TextureLoader();
-    const floorTexture = floorTextureLoader.load(options.textureOveride ? options.textureOveride : '../floor.jpg');
+    const floorTexture = floorTextureLoader.load(options.textureOveride ? options.textureOveride : '../floor_02.jpg');
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
 
@@ -34,6 +37,7 @@ export default (position, options) => {
     // Create Cannon.js body for the floor
     const floorShape = new CANNON.Box(new CANNON.Vec3(width / 2, depth / 2, 0.05));
     const floorBody = new CANNON.Body({ mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
+    floorBody.material = wallBodyMaterial;
     floorBody.addShape(floorShape);
     floorBody.userData = { collisionClass: 'floor', mesh: floorMesh }
     floorMesh.userData.physicsBody = floorBody; // Add to the array
@@ -45,7 +49,7 @@ export default (position, options) => {
   const wallThickness = 0.1;
 
   const textureLoader = new THREE.TextureLoader();
-  const texture = textureLoader.load(options.textureOveride ? options.textureOveride : '../wall_2.jpg');
+  const texture = textureLoader.load(options.textureOveride ? options.textureOveride : '../wall_01.jpg');
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
 
@@ -61,12 +65,14 @@ export default (position, options) => {
   const wallMaterial = new THREE.MeshPhongMaterial({ map: texture, opacity: 1, transparent: false });
 
 
+
   if(options.walls.leftwall) {
 
     // Left wall
     const leftWallPosition = new THREE.Vector3((-width / 2 + wallThickness / 2) + position.x, (height/2) + position.y, (depth / 2) + position.z);
     const leftWallShape = new CANNON.Box(new CANNON.Vec3(wallThickness / 2, height / 2, depth / 2));
     const leftWallBody = new CANNON.Body({ mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
+    leftWallBody.material = wallBodyMaterial;
     leftWallBody.addShape(leftWallShape);
     const leftWallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
     leftWallMesh.position.copy(leftWallPosition);
@@ -82,6 +88,7 @@ export default (position, options) => {
     const rightWallPosition = new THREE.Vector3((width / 2 - wallThickness / 2) + position.x, (height/2) + position.y, (depth / 2) + position.z);
     const rightWallShape = new CANNON.Box(new CANNON.Vec3(wallThickness / 2, height / 2, depth / 2));
     const rightWallBody = new CANNON.Body({ mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
+    rightWallBody.material = wallBodyMaterial;
     rightWallBody.addShape(rightWallShape);
     const rightWallMesh = new THREE.Mesh(wallGeometry, wallMaterial);
     rightWallMesh.position.copy(rightWallPosition);
@@ -96,6 +103,7 @@ export default (position, options) => {
     const backWallPosition = new THREE.Vector3(0 + position.x, (height/2) + position.y, (depth + wallThickness / 2) + position.z);
     const backWallShape = new CANNON.Box(new CANNON.Vec3(width / 2, height / 2, wallThickness / 2));
     const backWallBody = new CANNON.Body({ mass: 0, collisionFilterGroup: 1, collisionFilterMask: -1 });
+    backWallBody.material = wallBodyMaterial;
     backWallBody.addShape(backWallShape);
     const backWallGeometry = new THREE.BoxGeometry(width, height, wallThickness);
     const backWallMesh = new THREE.Mesh(backWallGeometry, wallMaterial);

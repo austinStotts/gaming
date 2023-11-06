@@ -41,8 +41,17 @@ import * as CANNON from "cannon";
 // }
 
 export default (width=10, height=12, angle=0, position=new CANNON.Vec3(0,0,0), ) => {
+
+    const textureLoader = new THREE.TextureLoader();
+    const texture = textureLoader.load('../stairs.jpg');
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    const repeatX = width; 
+    const repeatY = height/2; 
+    texture.repeat.set(repeatX, repeatY);
+
     let treadGeometry = new THREE.BoxGeometry(width, 1, height/8);
-    let treadMaterial = new THREE.MeshBasicMaterial({ color: 0x00EE00 });
+    let treadMaterial = new THREE.MeshStandardMaterial({ map: texture });
     // let stairGroup = new THREE.Group();
 
     let treadShape = new CANNON.Box(new CANNON.Vec3(width/2, 0.5, (height/height)/2));
@@ -59,31 +68,40 @@ export default (width=10, height=12, angle=0, position=new CANNON.Vec3(0,0,0), )
         treadBody.position.copy(position);
         let tread = new THREE.Mesh(treadGeometry, treadMaterial);
         treadBody.position.y += i;
+        let quatY = new CANNON.Quaternion();
+        let quatX = new CANNON.Quaternion();
         if(angle == 0) {
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), (0));
             tread.quaternion.copy(treadBody.quaternion);
-            treadMeshes.push(tread);
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), (0.05));
+            quatX.setFromAxisAngle(new CANNON.Vec3(1,0,0), (0.05));
+            treadBody.quaternion = quatX;
             treadBody.position.z += i;
             tread.position.copy(treadBody.position);
-        } else if(angle == 1) {
-            // treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), (-0.05));
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), (Math.PI/2));
-            tread.quaternion.copy(treadBody.quaternion);
             treadMeshes.push(tread);
-            
+        } else if(angle == 1) {
+            quatY.setFromAxisAngle(new CANNON.Vec3(0,1,0), (Math.PI/2));
+            quatX.setFromAxisAngle(new CANNON.Vec3(1,0,0), (0.05));
+            treadBody.quaternion = quatY;
+            tread.quaternion.copy(treadBody.quaternion);
+            treadBody.quaternion.x = quatX.x;
             treadBody.position.x += i;
             tread.position.copy(treadBody.position);
-        } else if(angle == 2) {
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), (Math.PI));
-            tread.quaternion.copy(treadBody.quaternion);
             treadMeshes.push(tread);
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(1,0,0), (-0.05));
+        } else if(angle == 2) {
+            tread.quaternion.copy(treadBody.quaternion);
+            quatX.setFromAxisAngle(new CANNON.Vec3(1,0,0), (-0.05));
+            treadBody.quaternion = quatX;
             treadBody.position.z -= i;
             tread.position.copy(treadBody.position);
+            treadMeshes.push(tread);
         } else if(angle == 3) {
-            treadBody.quaternion.setFromAxisAngle(new CANNON.Vec3(0,1,0), (Math.PI)/2);
+            quatY.setFromAxisAngle(new CANNON.Vec3(0,1,0), (Math.PI/2));
+            quatX.setFromAxisAngle(new CANNON.Vec3(1,0,0), (-0.05));
+            treadBody.quaternion = quatY;
+            tread.quaternion.copy(treadBody.quaternion);
+            treadBody.quaternion.x = quatX.x;
             treadBody.position.x -= i;
+            tread.position.copy(treadBody.position);
+            treadMeshes.push(tread);
         }
 
         

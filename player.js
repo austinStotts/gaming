@@ -22,7 +22,7 @@ export default class Player {
         this.body;
         this.dmg_multipier = 1;
         this.speed_multiplier = 1;
-        this.jump_multipkier = 1;
+        this.jump_multiplier = 1.1;
     }
 
 
