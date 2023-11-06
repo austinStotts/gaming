@@ -8,6 +8,7 @@ import Rifle from "./weapons/rifle";
 
 export default class Player {
     constructor(id) {
+        this.class = "player"
         this.id = id;
         this.hp = 100;
         this.armor = 0;

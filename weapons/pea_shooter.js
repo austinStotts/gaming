@@ -83,10 +83,6 @@ export default class Pea_Shooter {
         projectileBody.userData = {physicsMesh: projectileMesh, collisionClass: "userProjectile", removeAfterMS: this.removeAfterMS}
         projectileBody.collisionFilterGroup = 2;
         projectileBody.collisionFilterMask = -1;
-        // projectileBody.ccdSpeedThreshold = 0.1;  // Adjust the threshold as needed
-        // projectileBody.ccdIterations = 0.5;
-        // projectileBody.ccdSweptSphereRadius = 0.2;
-        // projectileBody.collisionMargin = 0.001;
 
         var vector = new THREE.Vector3();
         vector.setFromMatrixPosition(camera.matrixWorld); // Get the position of the camera in the world
@@ -95,8 +91,6 @@ export default class Pea_Shooter {
         vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).multiplyScalar(0));
 
         projectileMesh.position.copy(vector);
-        // projectileMesh.position.
-        // projectileMesh.position.x += 0.5;
         projectileBody.position.copy(projectileMesh.position);
         const cameraDirection = new THREE.Vector3();
         camera.getWorldDirection(cameraDirection);

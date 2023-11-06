@@ -28,7 +28,7 @@ export default class Rook {
     constructor(location={x:0,y:0,z:0}) {
         this.class = "rook";
         this.hp = 80;
-        this.damage = 25;
+        this.damage = 40;
         [this.mesh, this.body] = makeRook(location);
         this.drop_table;
         this.moveSpeed = 8;

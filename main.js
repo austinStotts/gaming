@@ -43,7 +43,7 @@ let isJumping = false;
 let jumpStartTime = 0;
 const jumpDuration = 600; // in milliseconds
 const jumpHeight = 3;
-const moveInterval = 150;
+const moveInterval = 200;
 // PLAYER
 let PLAYER = new Player('steve');
 // ENEMIES
@@ -57,7 +57,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
-let turnOffSpawn = true;
+let turnOffSpawn = false;
 
 
 
@@ -435,6 +435,11 @@ let create_player_body = (player) => {
 
 let playerCollision = (event) => {
   if(event.body.userData.collisionClass == "floor") { isJumping=false }
+  else if(event.body.userData.collisionClass == "enemyProjectile" || event.target.userData.collisionClass == "enemyProjectile") {
+    console.log("HIT BY ENEMY");
+    PLAYER.take_damage(event.body.userData.damage || event.target.userData.damage);
+    updateHP(PLAYER);
+  }
   // if(event.body.userData.collisionClass != "floor") { console.log(event) }
 }
 
@@ -806,69 +811,16 @@ let buildConstructs = (construct) => {
   
 }
 
-// ## ## ## ## ##
-// DOOR TESTING
-
-
-
-
-// let doorid = "0001";
-// let door_one = new Door(5, 12, doorid, true);
-// door_one.body.position.set(-49.8, 18, 32.5);
-// door_one.mesh.position.copy(door_one.body.position)
-// door_one.body.userData.isInteractable = true;
-// door_one.body.userData.name = "locked door";
-// door_one.body.userData.construct_id = doorid;
-// constructs.push({construct_id: doorid, object: door_one})
-// scene.add(door_one.mesh);
-// world.addBody(door_one.body);
-// console.log(door_one.body);
 
 map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
 map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
 map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
 
-// let rotate = true;
-// let [stairMeshes, stairBodies] = makeRamp(10, 12, 2, new CANNON.Vec3(0,0,-10));
 
 
 
 
-// stair.position.z = 5;
-// console.log(stair)
-// scene.add(stair);
-// // console.log(bodies);
-// // stair.children.forEach((tread, i) => { tread.position.copy(bodies[i].position) })
-// bodies.forEach((body, i) => { 
-//   console.log(body.quaternion.x, body.quaternion.y, body.quaternion.z, body.quaternion.w)
-//   console.log(stair.children[i].position.x, stair.children[i].position.y, stair.children[i].position.z)
-//   body.addEventListener("collide", (event) => {
-//     if(event.target.userData.collisionClass == "player") {
-      
-//       let upwardVelocityLimit = 0.15;
-//       let pBody = event.target;
-//       console.log("1", pBody)
-//       if (pBody.velocity.y > upwardVelocityLimit) {
-//         pBody.velocity.y = upwardVelocityLimit;
-//       }
-//     } else if(event.body.userData.collisionClass == "player") {
-//       let upwardVelocityLimit = 0.15;
-//       let pBody = event.body;
-//       console.log("2", pBody)
-//       if (pBody.velocity.y > upwardVelocityLimit) {
-//         pBody.velocity.y = upwardVelocityLimit;
-//       }
-//     }
 
-//   })
-//   // body.position.copy(stair.children[i].position)
-//   // body.position.z += 5; 
-//   // body.rota(new THREE.Vector3(0,1,0), (Math.PI))
-//   body.position.y -= 0.2;
-//   world.addBody(body);
-// })
-
-// position, rotation, options
 
 
 
@@ -949,6 +901,40 @@ let move_towards_player = (mesh, body, speed) => {
   direction.sub(mesh.position);
   const velocity = direction.clone().normalize().multiplyScalar(override ? 0 : speed); // CHANGE TO 'SPEED'
   body.velocity.set(velocity.x, -1, velocity.z);
+}
+
+let checkBishopFire = (time) => {
+  if(Date.now() - time > 3000) {
+    return true
+  } else{ return false }
+}
+
+let moveBishop = (bishop) => {
+  let result = new CANNON.RaycastResult();
+  world.rayTest(PLAYER.body.position, bishop.body.position, result);
+  if(result.distance < 20) {
+    bishop.fireTime = Date.now();
+    let direction = new THREE.Vector3();
+    camera.getWorldPosition(direction);
+    direction.sub(bishop.mesh.position);
+    const velocity = direction.clone().normalize().multiplyScalar(override ? 0 : -bishop.moveSpeed - 3); // CHANGE TO 'SPEED'
+    bishop.body.velocity.set(velocity.x, -1, velocity.z);
+  } else if(result.distance > 100) {
+    // out of range, do nothing
+  } else if(result.distance > 40) {
+    bishop.fireTime = Date.now();
+    let direction = new THREE.Vector3();
+    camera.getWorldPosition(direction);
+    direction.sub(bishop.mesh.position);
+    const velocity = direction.clone().normalize().multiplyScalar(override ? 0 : bishop.moveSpeed); // CHANGE TO 'SPEED'
+    bishop.body.velocity.set(velocity.x, -1, velocity.z);
+  } else {
+    if(checkBishopFire(bishop.fireTime)) {
+      createProjectile(bishop);
+      bishop.fireTime = Date.now();
+    }
+  }
+
 }
 
 
@@ -1247,6 +1233,21 @@ let removeProjectile = (projectile) => {
 // Actual projectile is make in weapon class
 let projectiles = [];
 function createProjectile(player) {
+  if(player.class == "bishop") {
+    let p = player.createProjectile(player.body.position, PLAYER.body.position);
+    for(let i = 0; i < p.body.length; i++) {
+      scene.add(p.mesh[i]);
+      world.addBody(p.body[i]);
+      projectiles.push({
+        mesh: p.mesh[i],
+        body: p.body[i],
+        removeAfterMS: p.body[i].userData.removeAfterMS,
+        createdAt: Date.now(),
+        rules: p.rules ? p.rules : undefined,
+        callback: p.callback ? p.callback : undefined
+      });
+    }
+  } else {
   if(player.weapon.inMagazine > 0 && !isReloading && !isInventoryOpen && !isSwappingWeapons && !isAlreadyDead) {
     player.weapon.removeAmmo(player);
     updateAmmo(player);
@@ -1271,7 +1272,7 @@ function createProjectile(player) {
         });
       }
     }
-  }
+  }}
 }
 
 // Is acalled every frame to move projectiles
@@ -1421,6 +1422,16 @@ let saveWave = () => {
   }))
 }
 
+let animateWaveChange = () => {
+  let waveLabel = document.getElementById("wave-wrapper");
+  waveLabel.classList.add("shrink");
+  setTimeout(() => {
+    updateWave();
+    waveLabel.classList.remove("shrink");
+    waveLabel.classList.add("grow");
+  }, 1500)
+}
+
 
 // ## ## ## ## ## ## ## ## ## ## ##
 // UPDATE FUNCTIONS
@@ -1459,7 +1470,12 @@ let updateItems = () => {
 
 let updateEnemyPhysics = () => {
   Object.keys(enemies).forEach((key) => {
-    move_towards_player(enemies[key].mesh, enemies[key].body, enemies[key].moveSpeed)
+    if(enemies[key].class == "bishop") {
+      moveBishop(enemies[key])
+    } else {
+      move_towards_player(enemies[key].mesh, enemies[key].body, enemies[key].moveSpeed)
+    }
+    
     enemies[key].mesh.position.copy(enemies[key].body.position);
     enemies[key].mesh.quaternion.copy(enemies[key].body.quaternion);
   })
@@ -1468,10 +1484,28 @@ let updateEnemyPhysics = () => {
     wave += 1;
     hasSpawned = false;
     saveWave();
-    updateWave();
-    spawn();
+    animateWaveChange();
+    setTimeout(() => {
+      
+      spawn();
+    }, 5000)
   }
 }
+
+let keepBishopsUpright = () => {
+  Object.keys(enemies).forEach((key) => {
+    if(enemies[key].class == "bishop") {
+      const forceMagnitude = 2000; 
+
+      const currentUp = new CANNON.Vec3(0, 1, 0); 
+      const worldUp = enemies[key].body.quaternion.vmult(currentUp); 
+      const antiRotationForce = worldUp.scale(-forceMagnitude); 
+      enemies[key].body.applyForce(antiRotationForce, enemies[key].body.position)
+    }
+  })
+}
+
+
 
 let updateConstructs = () => {
   for(let i = 0; i < constructs.length; i++) {
@@ -1509,6 +1543,7 @@ const animate = () => {
   updateGame();
   updateItems();
   checkHP();
+  // keepBishopsUpright();
   updateConstructs();
 
   bodiesToRemove.forEach(removeBodies);
