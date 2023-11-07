@@ -26,9 +26,10 @@
             <div id="interact-label" class="interact-label"></div>
         </div>
         <div class="crosshair-wrapper"><span class="crosshair-v"></span><span class="crosshair-h"></span></div>
+        <div class="shield-wrapper"><progress id="shield" class="shield-bar" max="100">shield</progress></div>
         <div class="hp-wrapper"><progress id="hp" class="hp-bar" max="100">hp</progress></div>
         <div id="weapon-loader-wrapper"><progress id="weapon-loader" max="100" value="0" style="display: none;"></progress></div>
-        <div id="reload-loader-wrapper" class="reload-loader-wrapper"><progress id="reload-loader" class="reload-loader" max="100" value="0"></progress></div>
+        <div id="reload-loader-wrapper" class="reload-loader-wrapper"><progress id="reload-loader" class="reload-loader" max="100" value="0" style="display: none;"></progress></div>
         <div class="ammo-wrapper"><span id="mag" class="mag"></span>/<span id="reserve" class="reserve"></span></div>
         <div id="wave-wrapper" class="wave-wrapper"><span class="wave-label"></span><span id="wave" class="wave"></span></div>
         <div class="item-pickup-log-wrapper">
@@ -49,9 +50,9 @@
                             <progress id="shield-stat-progress" max="100" value="100"></progress>
                         </div>
                         <div class="value-modifiers-wrapper">
-                            <div class="damage-modifier">dmg modifier:<div id="dmg-modifier-value">1</div></div>
-                            <div class="speed-modifier">speed modifier:<div id="speed-modifier-value">1</div></div>
-                            <div class="jump-modifier">jump modifier:<div id="jump-modifier-value">1</div></div>
+                            <div class="damage-modifier">dmg modifier: <div id="dmg-modifier-value">1</div></div>
+                            <div class="speed-modifier">speed modifier: <div id="speed-modifier-value">1</div></div>
+                            <div class="jump-modifier">jump modifier: <div id="jump-modifier-value">1</div></div>
                         </div>
                     </div>
                     <div class="weapons-wrapper">

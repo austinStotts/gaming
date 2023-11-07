@@ -5,13 +5,14 @@ import Pea_Shooter from "./weapons/pea_shooter";
 import Shotgun from "./weapons/shotgun";
 import Pulse_Bomb from './weapons/pulse_bomb';
 import Rifle from "./weapons/rifle";
+import light_armor from "./armor/light_armor.js";
 
 export default class Player {
     constructor(id) {
         this.class = "player"
         this.id = id;
         this.hp = 100;
-        this.armor = 0;
+        this.armor = undefined;
         this.speed = 60;
         this.acc = 0.25;
         this.dec = 0.2;
@@ -21,8 +22,8 @@ export default class Player {
         this.secondary = undefined;
         this.mesh;
         this.body;
-        this.dmg_multipier = 1;
-        this.speed_multiplier = 1;
+        this.dmg_multiplier = 1.2;
+        this.speed_multiplier = 1.5;
         this.jump_multiplier = 1.1;
     }
 
@@ -46,6 +47,6 @@ export default class Player {
     }
 
     take_damage (n) {
-        this.hp = this.hp - n;
+        this.hp = this.hp - this.armor.take_damage(n);
     }
 } 

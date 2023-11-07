@@ -29,6 +29,7 @@ import Pulse_Bomb from './weapons/pulse_bomb.js';
 import Shotgun from './weapons/shotgun.js';
 import Rifle from './weapons/rifle.js';
 import Key from './items/key.js';
+import light_armor from "./armor/light_armor.js"
 
 
 
@@ -273,9 +274,22 @@ let updateAmmo = (player) => {
   if(!foundAmmo) {reserve.textContent = 0}
 }
 
-let updateHP = (player) => {
+let updateHP = () => {
   let hp = document.getElementById("hp");
-  hp.value = player.hp;
+  let hpStat = document.getElementById("hp-stat-progress");
+  let hpStatValue = document.getElementById("hp-stat-value");
+  let shield = document.getElementById("shield");
+  let shieldStat = document.getElementById("shield-stat-progress");
+  let shieldStatValue = document.getElementById("shield-stat-value");
+  if(PLAYER.armor) {
+    shieldStat.value = PLAYER.armor.current_shield;
+    shieldStatValue.innerText = PLAYER.armor.current_shield;
+    shield.value = PLAYER.armor.current_shield;
+  }
+
+  hpStat.value = PLAYER.hp;
+  hpStatValue.innerText = PLAYER.hp;
+  hp.value = PLAYER.hp;
 }
 
 let updateWave = () => {
@@ -292,6 +306,16 @@ let handleDMG = (enemy, player) => {
 let getWeapon = (id) => {
   if(id == "pea_shooter") { return Pea_Shooter }
   else if(id == "shotgun") { return Shotgun }
+}
+
+let updatePlayerStats = () => {
+  let pDMG = document.getElementById("dmg-modifier-value");
+  let pSpeed = document.getElementById("speed-modifier-value");
+  let pJump = document.getElementById("jump-modifier-value");
+
+  pDMG.innerText = `${PLAYER.dmg_multiplier}`;
+  pSpeed.innerText = `${PLAYER.speed_multiplier}`;
+  pJump.innerText = `${PLAYER.jump_multiplier}`;
 }
 
 // ## ## ## ## ## ## ## ##
@@ -428,7 +452,6 @@ let create_player_body = (player) => {
   playerBody.collisionFilterGroup = 1;
   playerBody.collisionFilterMask = 1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
-  console.log(playerBody)
   playerBody.addEventListener("collide", playerCollision)
   player.set_body(playerBody)
   world.addBody(playerBody);
@@ -437,12 +460,10 @@ let create_player_body = (player) => {
 let playerCollision = (event) => {
   if(event.body.userData.collisionClass == "floor") { isJumping=false }
   else if(event.body.userData.collisionClass == "enemyProjectile" || event.target.userData.collisionClass == "enemyProjectile") {
-    console.log("HIT BY ENEMY");
     PLAYER.take_damage(event.body.userData.damage || event.target.userData.damage);
     showDamage();
     updateHP(PLAYER);
   }
-  // if(event.body.userData.collisionClass != "floor") { console.log(event) }
 }
 
 // let zero = makeMesh(1,50, 1, 0x53D996);
@@ -472,6 +493,7 @@ let get_random = (n) => {
 
 let updateInventory = () => {
   let inv = document.getElementById("items-wrapper");
+  
   inv.childNodes.forEach((cell,i) => {
     if(PLAYER.inventory[i] != undefined && cell.childNodes.length<1) {
       // item img
@@ -493,16 +515,13 @@ let updateInventory = () => {
       cell.appendChild(img);
       cell.appendChild(counter);
       cell.appendChild(tooltip);
-      cell.onmouseover = (e) => { console.log("MOUSE OVER ", i); document.getElementById(`tooltip-${i}`).hidden=false; }
+      cell.onmouseover = (e) => { document.getElementById(`tooltip-${i}`).hidden=false; }
       cell.onmouseleave = (e) => { document.getElementById(`tooltip-${i}`).hidden=true; }
 
     } else if (PLAYER.inventory[i] != undefined && cell.childNodes.length>1) {
       cell.childNodes[1].textContent = PLAYER.inventory[i].count;
       cell.childNodes[0].src = `https://sl-gaming.s3.amazonaws.com/inv-assets/${PLAYER.inventory[i].img}`
     } else {
-      // if(cell == undefined) {
-      //   console.log("WE GOT AN UNDEFINED")
-      // }
       if(cell.childNodes.length>0) { // remove in backwards order
         cell.removeChild(cell.childNodes[2])
         cell.removeChild(cell.childNodes[1])
@@ -525,6 +544,8 @@ let toggle_inventory = () => {
     isInventoryOpen = true;
     toggleCursorLock();
   }
+  updatePlayerStats();
+  updateHP(PLAYER)
 }
 
 let toggleCursorLock = (force=false) => {
@@ -599,7 +620,6 @@ let inv_end;
 let inv_drop = (event, id) => { 
   inv_end = id;
   [PLAYER.inventory[inv_start], PLAYER.inventory[inv_end]] = [PLAYER.inventory[inv_end], PLAYER.inventory[inv_start]];
-  // console.log(PLAYER.inventory)
   updateInventory();
 }
 let inv_pickup = (event, id) => {
@@ -641,6 +661,7 @@ let shotgunammo = new shotgun_ammo(24);
 let test_energy = new energy_ammo(20);
 
 let shotgun = new Shotgun();
+let lightArmor = new light_armor();
 
 let giveWeapon = (weapon) => {
   if(PLAYER.weapon == undefined) {
@@ -656,8 +677,22 @@ let giveWeapon = (weapon) => {
   }
 
   weapon.toBeDeleted = true;
-  console.log(weapon)
-  console.log(PLAYER)
+  update_inv_ui();
+  updateAmmo(PLAYER);
+  updateInventory();
+}
+
+let giveArmor = (armor) => {
+  if(PLAYER.armor == undefined) {
+    PLAYER.armor = armor;
+    armor.toBeDeleted = true;
+  } else {
+    dropItem(PLAYER.armor, PLAYER.body.position);
+    PLAYER.armor = armor;
+    armor.toBeDeleted = true;
+  }
+
+  armor.toBeDeleted = true;
   update_inv_ui();
   updateAmmo(PLAYER);
   updateInventory();
@@ -666,7 +701,7 @@ let giveWeapon = (weapon) => {
 let dropItem = (item, position) => { // put item at any location
   let time = Date.now();
   item.body.position.set(position.x, position.y, position.z)
-  if(item.body.userData.collisionClass != "weapon") {
+  if(item.body.userData.collisionClass == "item") {
     item.body.addEventListener('collide', (event) => {
       if(event.body.userData.collisionClass == "player" && !item.body.userData.hasBeenCollected) {
         item.body.userData.hasBeenCollected = true;
@@ -690,7 +725,9 @@ dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
 dropItem(new Key('0001', "key to the storage room"), new CANNON.Vec3(0, 13, 10))
 
 // dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
-dropItem(shotgun, new CANNON.Vec3(-77,13,36))
+dropItem(shotgun, new CANNON.Vec3(-77,13,36));
+dropItem(lightArmor, new CANNON.Vec3(0, 13, 14))
+
 
 // dropItem(rfl, new CANNON.Vec3(2,1,2))
 // dropItem(pb, new CANNON.Vec3(4,1,4))
@@ -776,7 +813,6 @@ let constructs = [];
 // 0        1            2         3
 // class - class args - location - name
 let buildConstructs = (construct) => {
-  // console.log(construct)
   let con = new construct.class(...construct.args);
   if(construct.class == Stairs) {
     for(let i = 0; i < con.mesh.length; i++) {
@@ -972,7 +1008,6 @@ let checkInteractable = () => {
   let raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
   let intersections = raycast.intersectObjects(scene.children);
   if(intersections.length > 0) {
-    // console.log(intersections);
     if(intersections[0].object.userData.isInteractable) {
       let time = Date.now();
       let edgeMesh = intersections[0].object.userData.edgeMesh;
@@ -997,7 +1032,6 @@ let interact = () => {
   let start = new CANNON.Vec3(cameraPosition.x, cameraPosition.y, cameraPosition.z);
   let raycast = new THREE.Raycaster(start, cameraDirection, 1.25, 10);
   let intersections = raycast.intersectObjects(scene.children);
-  console.log(intersections)
   for(let i = 0; i < intersections.length; i++) {
       if(intersections[i].object.isMesh) {
           let body = intersections[i].object.userData.physicsBody;
@@ -1005,6 +1039,10 @@ let interact = () => {
             let weapon;
             for(let i = 0; i < active_items.length; i++) { if(active_items[i].createdAt == body.userData.timecode) { weapon = active_items[i].item }}
             giveWeapon(weapon);
+          } else if(body.userData.collisionClass == "armor") {
+            let armor;
+            for(let i = 0; i < active_items.length; i++) { if(active_items[i].createdAt == body.userData.timecode) { armor = active_items[i].item }}
+            giveArmor(armor);
           }
           else if(body.userData.collisionClass == "door") {
             for(let i = 0; i < constructs.length; i++) {
@@ -1224,7 +1262,6 @@ let canvas = document.getElementById("canvas");
 let removeProjectile = (projectile) => {
   let deleteAt = projectile.createdAt + projectile.removeAfterMS;
   if(deleteAt < Date.now()) { 
-    // console.log(projectiles)
     world.remove(projectile.body);
     scene.remove(projectile.mesh);
     return true
@@ -1257,7 +1294,6 @@ function createProjectile(player) {
     cameraRotation.x += player.weapon.camera_kick;
     camera.rotateX(player.weapon.camera_kick)
     if(player.weapon.isHitScan) {
-      // console.log("HITSCAN!");
       player.weapon.createProjectile(camera, world, scene, enemies, damageEnemy)
     } else {
       let p = player.weapon.createProjectile(camera);
@@ -1568,6 +1604,10 @@ const animate = () => {
   renderer.render(scene, camera);
   // composer.render()
 };
+
+setInterval(() => {
+  updateHP();
+}, 150)
 
 // add console.logs
 setInterval(() => {

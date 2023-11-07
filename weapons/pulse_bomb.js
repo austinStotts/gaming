@@ -46,6 +46,7 @@ export default class Pulse_Bomb {
         this.camera_kick = 0.005;
         this.text = "looks heavier than it is";
         [this.mesh, this.body] = makeWeapon();
+        this.body.userData.name = this.display_name;
     }
 
 

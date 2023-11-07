@@ -44,6 +44,7 @@ export default class Pea_Shooter {
         this.camera_kick = 0.005;
         this.text = "might literally shoot peas";
         [this.mesh, this.body] = makeWeapon();
+        this.body.userData.name = this.display_name;
     }
 
     reload (player) {

@@ -42,6 +42,7 @@ export default class Rifle {
         this.camera_kick = 0.01;
         this.text = "is heavier than it looks";
         [this.mesh, this.body] = makeWeapon();
+        this.body.userData.name = this.display_name;
     }
 
     reload (player) {
