@@ -707,7 +707,21 @@ let giveWeapon = (weapon) => {
 
 let giveArmor = (armor) => {
   // update inv ui
+  let name = document.getElementById("armor-name");
+  let max = document.getElementById("max-shield");
+  let rr = document.getElementById("regen-rate");
+  name.innerText = armor.display_name;
+  max.innerText = armor.max_shield;
+  rr.innerText = `${(armor.regen_rate/1000)}s`
 
+  let bonusWrapper = document.getElementById("armor-bonuses");
+  for(let i = 0; i < armor.bonuses.length; i++) {
+    let bonus = document.createElement("div");
+    bonus.innerHTML = `
+      <div class="armor-bonus-item">${armor.bonuses[i].name}</div>
+    `
+    bonusWrapper.appendChild(bonus)
+  }
   //
   console.log(armor)
   if(PLAYER.armor == undefined) {

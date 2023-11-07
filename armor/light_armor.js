@@ -43,7 +43,7 @@ let roll_bonus = (n) => {
 
 export default class Light_Armor {
     constructor() {
-        this.display_name = "Light Armor"
+        this.display_name = "light armor"
         this.max_shield = 25;
         this.current_shield = 25;
         this.timeSinceDMG = Date.now();
@@ -52,6 +52,7 @@ export default class Light_Armor {
         [this.mesh, this.body] = makeArmor();
         this.body.userData.name = this.display_name;
         this.bonuses = roll_bonus(2);
+        this.regen_rate = 3000;
         this.check_regen = this.check_regen.bind(this);
 
         setInterval(() => {
@@ -60,7 +61,7 @@ export default class Light_Armor {
     }
 
     check_regen () {
-        if(this.timeSinceDMG + 3000 < Date.now()) {
+        if(this.timeSinceDMG + this.regen_rate < Date.now()) {
             this.current_shield >= this.max_shield ? this.current_shield=this.max_shield : this.current_shield += 1;
         }
     }

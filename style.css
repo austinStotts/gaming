@@ -238,6 +238,44 @@
     width: 158px;
     /* border: 1px solid mediumpurple; */
     border-right: 1px solid rgb(180, 180, 180);
+    font-family: monospace;
+}
+
+.armor-wrapper > div {
+    margin-left: 3px;
+}
+
+.armor-text {
+    color: #ffffff;
+}
+
+.armor-green {
+    color: springgreen;
+}
+
+.armor-blue {
+    color: dodgerblue;
+}
+
+.bonus-wrapper {
+    width: 100%;
+    margin-top: 5px;
+}
+.bonus-wrapper > div {
+    display: inline-block;
+}
+
+.armor-bonus-item {
+    border: 1px solid red;
+    background-color: rgba(255, 0, 0, 0.5);
+    padding: 0px 3px;
+    /* width: 40px; */
+    height: 20px;
+    border-radius: 8px;
+}
+
+.armor-bonus-item:hover {
+    cursor: pointer;
 }
 
 .stats-wrapper {

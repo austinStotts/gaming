@@ -2,6 +2,7 @@
 
 export default class Turmoil {
     constructor () {
+        this.name = "turmoil";
         this.hp_bonus = -0.1;
         this.damage_bonus = 0.2;
         this.speed_bonus = -0.1;
