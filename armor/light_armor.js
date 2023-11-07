@@ -1,5 +1,8 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
+import Swiftness from '../bonuses/swiftness';
+import Turmoil from '../bonuses/turmoil';
+
 
 let makeArmor = () => {
     let geometry = new THREE.BoxGeometry(1.5, 1.5, 3);
@@ -26,6 +29,18 @@ let makeArmor = () => {
     return [mesh, body];
 }
 
+let roll_bonus = (n) => {
+    let list = new Array(80);
+    for(let i = 0; i < 15; i++) { list.push(new Swiftness()) }
+    for(let i = 0; i < 5; i++) { list.push(new Turmoil()) }
+    let bonuses = [];
+    for(let i = 0; i < n; i++) {
+        let r = Math.ceil(Math.random() * 100)
+        if(list[r] != undefined) { bonuses.push(list[r]) }
+    }
+    return bonuses;
+}
+
 export default class Light_Armor {
     constructor() {
         this.display_name = "Light Armor"
@@ -36,7 +51,7 @@ export default class Light_Armor {
         this.text = "helps cover the weak spots... a little";
         [this.mesh, this.body] = makeArmor();
         this.body.userData.name = this.display_name;
-
+        this.bonuses = roll_bonus(2);
         this.check_regen = this.check_regen.bind(this);
 
         setInterval(() => {

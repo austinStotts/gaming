@@ -38,7 +38,7 @@ export default class health_pack {
 
     use (player) {
         player.hp += 25;
-        if(player.hp > 100) { player.hp = 100 }
+        if(player.hp > player.maxHP) { player.hp = player.maxHP }
         return true;
     }
 }

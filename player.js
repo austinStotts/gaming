@@ -11,7 +11,8 @@ export default class Player {
     constructor(id) {
         this.class = "player"
         this.id = id;
-        this.hp = 100;
+        this.maxHP = 100;
+        this.hp = this.maxHP;
         this.armor = undefined;
         this.speed = 60;
         this.acc = 0.25;
@@ -22,9 +23,9 @@ export default class Player {
         this.secondary = undefined;
         this.mesh;
         this.body;
-        this.dmg_multiplier = 1.2;
-        this.speed_multiplier = 1.5;
-        this.jump_multiplier = 1.1;
+        this.dmg_multiplier = 1;
+        this.speed_multiplier = 1;
+        this.jump_multiplier = 1;
     }
 
 
@@ -36,9 +37,6 @@ export default class Player {
     set_body (body) {
         this.body = body;
     }
-
-
-
 
     move_player (velocity) {
         let captureY = this.body.velocity.y;

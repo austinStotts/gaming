@@ -33,13 +33,19 @@
         <div class="ammo-wrapper"><span id="mag" class="mag"></span>/<span id="reserve" class="reserve"></span></div>
         <div id="wave-wrapper" class="wave-wrapper"><span class="wave-label"></span><span id="wave" class="wave"></span></div>
         <div class="item-pickup-log-wrapper">
-            <ul id="item-pickup-log" class="item-pickup-log">
-            </ul>
+            <ul id="item-pickup-log" class="item-pickup-log"></ul>
         </div>
         <dialog id="inventory">
             <div class="inventory-wrapper">
                 <div class="character-wrapper">
-                    <div class="armor-wrapper"></div>
+                    <div class="armor-wrapper">
+                        <div class="armor-name-wrapper">armor: <span id="armor-name">none</span></div>
+                        <div class="armor-details-wrapper">
+                            <div class="max-shield-wrapper">max shield: <span id="max-shield">n/a</span></div>
+                            <div class="regen-rate-wrapper">regeneration rate: <span id="max-shield">n/a</span></div>
+                            <div class="bonus-wrapper"></div>
+                        </div>
+                    </div>
                     <div class="stats-wrapper">
                         <div class="hp-stat-wrapper">
                             <div class="hp-stat-label">hp:<span id="hp-stat-value">100</span></div>

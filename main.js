@@ -255,6 +255,29 @@ let update_inv_ui = () => {
 // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // HELPER FUNCTIONS FOR GAME UI
 
+let applyBonuses = () => {
+  let oldMaxHP = PLAYER.maxHP;
+  let bonuses = PLAYER.armor.bonuses;
+  let hp = 1;
+  let damage = 1;
+  let speed = 1;
+  let jump = 1;
+  bonuses.forEach(bonus => {
+    if(bonus.hp_bonus) { hp += bonus.hp_bonus }
+    if(bonus.damage_bonus) { damage += bonus.damage_bonus }
+    if(bonus.speed_bonus) { speed += bonus.speed_bonus }
+    if(bonus.jump_bonus) { jump += bonus.jump_bonus }
+  })
+  PLAYER.maxHP = (PLAYER.maxHP*hp);
+  PLAYER.dmg_multiplier = (PLAYER.dmg_multiplier*damage);
+  PLAYER.speed_multiplier = (PLAYER.speed_multiplier*speed);
+  PLAYER.jump_multiplier = (PLAYER.jump_multiplier*jump);
+
+  if(PLAYER.hp == oldMaxHP) { PLAYER.hp = PLAYER.maxHP }
+  updateHP();
+  console.log(PLAYER)
+}
+
 let updateAmmo = (player) => {
   let mag = document.getElementById("mag");
   let reserve = document.getElementById("reserve");
@@ -288,7 +311,7 @@ let updateHP = () => {
   }
 
   hpStat.value = PLAYER.hp;
-  hpStatValue.innerText = PLAYER.hp;
+  hpStatValue.innerText = `${PLAYER.hp}/${PLAYER.maxHP}`;
   hp.value = PLAYER.hp;
 }
 
@@ -683,6 +706,10 @@ let giveWeapon = (weapon) => {
 }
 
 let giveArmor = (armor) => {
+  // update inv ui
+
+  //
+  console.log(armor)
   if(PLAYER.armor == undefined) {
     PLAYER.armor = armor;
     armor.toBeDeleted = true;
@@ -693,6 +720,7 @@ let giveArmor = (armor) => {
   }
 
   armor.toBeDeleted = true;
+  applyBonuses();
   update_inv_ui();
   updateAmmo(PLAYER);
   updateInventory();
@@ -878,7 +906,7 @@ let handleDrops = (enemy) => {
 }
 
 let damageEnemy = (enemy, damage) => {
-  if(enemy.update_hp(damage)) {
+  if(enemy.update_hp(damage * PLAYER.dmg_multiplier)) {
     handleDrops(enemies[enemy.body.userData.id])
     removeEnemy(enemy.body.userData.id);
   }
