@@ -29,7 +29,8 @@ import Pulse_Bomb from './weapons/pulse_bomb.js';
 import Shotgun from './weapons/shotgun.js';
 import Rifle from './weapons/rifle.js';
 import Key from './items/key.js';
-import light_armor from "./armor/light_armor.js"
+import Light_armor from "./armor/light_armor.js"
+import Heavy_Armor from './armor/heavy_armor.js';
 
 
 
@@ -684,7 +685,8 @@ let shotgunammo = new shotgun_ammo(24);
 let test_energy = new energy_ammo(20);
 
 let shotgun = new Shotgun();
-let lightArmor = new light_armor();
+let lightArmor = new Light_armor();
+let heavyArmor = new Heavy_Armor();
 
 let giveWeapon = (weapon) => {
   if(PLAYER.weapon == undefined) {
@@ -784,7 +786,7 @@ dropItem(new Key('0001', "key to the storage room"), new CANNON.Vec3(0, 13, 10))
 
 // dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
 dropItem(shotgun, new CANNON.Vec3(-77,13,36));
-dropItem(lightArmor, new CANNON.Vec3(0, 13, 14))
+dropItem(heavyArmor, new CANNON.Vec3(0, 13, 14))
 
 
 // dropItem(rfl, new CANNON.Vec3(2,1,2))

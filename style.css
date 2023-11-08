@@ -247,15 +247,15 @@
 
 .armor-text {
     color: #ffffff;
+    
 }
 
-.armor-green {
-    color: springgreen;
+.armor-title {
+    color: rgb(255, 95, 95);
+    font-size: 15px;
 }
 
-.armor-blue {
-    color: dodgerblue;
-}
+
 
 .bonus-wrapper {
     width: 100%;
@@ -278,6 +278,12 @@
 .armor-green {
     border: 1px solid rgb(25, 255, 48);
     background-color: rgba(25, 255, 48, 0.5);
+    color: white;
+}
+
+.armor-blue {
+    border: 1px solid rgba(30, 143, 255, 1);
+    background-color: rgba(30, 143, 255, 0.5);
     color: white;
 }
 

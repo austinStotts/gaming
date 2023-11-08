@@ -9,7 +9,7 @@ import Ironheart from '../bonuses/ironheart';
 
 let makeArmor = () => {
     let geometry = new THREE.BoxGeometry(1.5, 1.5, 3);
-    let material = new THREE.MeshBasicMaterial({ color: 0xfbc02d, wireframe: false, transparent: false });
+    let material = new THREE.MeshBasicMaterial({ color: 0xfc6203, wireframe: false, transparent: false });
     let mesh = new THREE.Mesh(geometry, material);
     let edgeGeo = new THREE.EdgesGeometry(geometry);
     let edgeMat = new THREE.MeshBasicMaterial({ color: 0xFFFFFF, wireframe: false, transparent: false }); 
@@ -46,18 +46,18 @@ let roll_bonus = (n) => {
     return bonuses;
 }
 
-export default class Light_Armor {
+export default class Heavy_Armor {
     constructor() {
-        this.display_name = "light armor"
-        this.max_shield = 25;
-        this.current_shield = 25;
+        this.display_name = "heavy armor"
+        this.max_shield = 50;
+        this.current_shield = 50;
         this.timeSinceDMG = Date.now();
-        this.id = "light_armor";
-        this.text = "helps cover the weak spots... a little";
+        this.id = "heavy_armor";
+        this.text = "i would still avoid getting hit";
         [this.mesh, this.body] = makeArmor();
         this.body.userData.name = this.display_name;
-        this.bonuses = roll_bonus(2);
-        this.regen_rate = 3000;
+        this.bonuses = roll_bonus(3);
+        this.regen_rate = 6000;
         this.check_regen = this.check_regen.bind(this);
 
         setInterval(() => {
