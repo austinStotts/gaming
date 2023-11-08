@@ -266,16 +266,65 @@
 }
 
 .armor-bonus-item {
+    padding: 0px 1px;
+    /* width: 40px; */
+    height: 18px;
+    border-radius: 8px;
+    font-style: italic;
+    font-size: 13px;
+    margin: 2px;
+}
+
+.armor-green {
+    border: 1px solid rgb(25, 255, 48);
+    background-color: rgba(25, 255, 48, 0.5);
+    color: white;
+}
+
+.armor-red {
     border: 1px solid red;
     background-color: rgba(255, 0, 0, 0.5);
-    padding: 0px 3px;
-    /* width: 40px; */
-    height: 20px;
-    border-radius: 8px;
+}
+
+.armor-conflict {
+    border: 1px solid rgb(164, 28, 255);
+    background-color: rgb(164, 28, 255, 0.5);
+    color: crimson;
 }
 
 .armor-bonus-item:hover {
     cursor: pointer;
+}
+
+.bonus-details {
+    position: fixed;
+    left: 181px;
+    top: 17px;
+    background-color: black;
+    color: white;
+    font-family: monospace;
+    z-index: 119;
+    padding: 4px;
+    /* text-wrap: nowrap; */
+}
+
+.armor-name {
+    display: block;
+    font-size: 16px;
+    margin: 3px 0px 2px 3px;
+}
+
+.armor-desc {
+    font-size: 11px;
+    font-style: italic;
+    color: lightblue;
+    margin: 2px 0px 2px 3px;
+    display: block;
+}
+
+.armor-mod {
+    display: block;
+    margin-left: 3px;
 }
 
 .stats-wrapper {
@@ -287,7 +336,7 @@
     
     /* border: 1px solid salmon; */
     border-right: 1px solid rgb(180, 180, 180);
-    padding-top: 5px;
+    /* padding-top: 5px; */
     /* padding-right: 2px; */
 }
 
@@ -766,3 +815,31 @@
         transform: scale(0);
     }
 }
+
+
+#hitmarker {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 100;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+    border: 1px dashed white;
+    width: 14px;
+    height: 14px;
+    border-radius: 7px;
+}
+
+.hitmarker {
+    animation: hitmarker 0.5s;
+}
+
+@keyframes hitmarker {
+    0%   {opacity: 0%;}
+    50%  {opacity: 100%;}
+    100% {opacity: 0%;}
+}
+
+
+
+

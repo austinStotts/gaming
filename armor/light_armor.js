@@ -30,9 +30,9 @@ let makeArmor = () => {
 }
 
 let roll_bonus = (n) => {
-    let list = new Array(80);
-    for(let i = 0; i < 15; i++) { list.push(new Swiftness()) }
-    for(let i = 0; i < 5; i++) { list.push(new Turmoil()) }
+    let list = new Array(10);
+    for(let i = 0; i < 45; i++) { list.push(new Swiftness()) }
+    for(let i = 0; i < 45; i++) { list.push(new Turmoil()) }
     let bonuses = [];
     for(let i = 0; i < n; i++) {
         let r = Math.ceil(Math.random() * 100)

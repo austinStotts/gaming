@@ -718,8 +718,24 @@ let giveArmor = (armor) => {
   for(let i = 0; i < armor.bonuses.length; i++) {
     let bonus = document.createElement("div");
     bonus.innerHTML = `
-      <div class="armor-bonus-item">${armor.bonuses[i].name}</div>
+      <div class="armor-bonus-item armor-${armor.bonuses[i].rarity}">${armor.bonuses[i].name}</div>
     `
+
+    let bonusDetails = document.createElement("div");
+    bonusDetails.hidden = true;
+    bonusDetails.classList.add("bonus-details");
+    bonusDetails.innerHTML = `
+    <span class="armor-name">${armor.bonuses[i].name}</span>
+    <span class="armor-desc">${armor.bonuses[i].description}</span>
+    <span class="armor-mod">hp: ${armor.bonuses[i].hp_bonus ? (armor.bonuses[i].hp_bonus*100 + "%") : "n/a"}</span>
+    <span class="armor-mod">damage: ${armor.bonuses[i].damage_bonus ? (armor.bonuses[i].damage_bonus*100 + "%") : "n/a"}</span>
+    <span class="armor-mod">speed: ${armor.bonuses[i].speed_bonus ? (armor.bonuses[i].speed_bonus*100 + "%") : "n/a"}</span>
+    <span class="armor-mod">jump: ${armor.bonuses[i].jump_bonus ? (armor.bonuses[i].jump_bonus*100 + "%") : "n/a"}</span>
+    `
+
+    bonus.addEventListener("mouseover", () => { bonusDetails.hidden = false })
+    bonus.addEventListener("mouseleave", () => { bonusDetails.hidden = true })
+    bonus.appendChild(bonusDetails)
     bonusWrapper.appendChild(bonus)
   }
   //
@@ -920,6 +936,7 @@ let handleDrops = (enemy) => {
 }
 
 let damageEnemy = (enemy, damage) => {
+  
   if(enemy.update_hp(damage * PLAYER.dmg_multiplier)) {
     handleDrops(enemies[enemy.body.userData.id])
     removeEnemy(enemy.body.userData.id);
@@ -930,7 +947,9 @@ let enemyCollision = (event) => {
   if(event.body.userData.collisionClass == "userProjectile" || event.target.userData.collisionClass == "userProjectile") {
     let id = event.target.userData.id;
     if(enemies[id]) {
-      if(enemies[id].update_hp(PLAYER.weapon.projectileDMG)) {
+      animateHitmarker(false);
+      if(enemies[id].update_hp(PLAYER.weapon.projectileDMG*PLAYER.dmg_multiplier)) {
+        
         handleDrops(enemies[id])
         removeEnemy(event.target.userData.id);
       }
@@ -1510,6 +1529,22 @@ let animateWaveChange = () => {
     waveLabel.classList.remove("shrink");
     waveLabel.classList.add("grow");
   }, 1500)
+}
+
+let animateHitmarker = (crit=false) => {
+  console.log("HIT")
+  if(crit) {
+
+  } else {
+    let hm = document.getElementById("hitmarker");
+    hm.hidden = false;
+    hm.classList.add("hitmarker");
+    setTimeout(() => {
+      hm.hidden = true;
+      hm.classList.remove("hitmarker");
+    }, 150)
+
+  }
 }
 
 
