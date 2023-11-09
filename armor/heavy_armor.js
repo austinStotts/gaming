@@ -67,7 +67,8 @@ export default class Heavy_Armor {
 
     check_regen () {
         if(this.timeSinceDMG + this.regen_rate < Date.now()) {
-            this.current_shield >= this.max_shield ? this.current_shield=this.max_shield : this.current_shield += 1;
+            this.current_shield >= this.max_shield ? this.current_shield=this.max_shield : this.current_shield += 3;
+            this.timeSinceDMG = Date.now();
         }
     }
 

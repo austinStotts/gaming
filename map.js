@@ -4,6 +4,7 @@ import * as CANNON from 'cannon'
 import Door from "./constructs/door";
 import Lantern from './constructs/lantern';
 import Stairs from './constructs/stairs';
+import Altar from './constructs/altar';
 
 let makeWallObject = (a) => {
     return {
@@ -66,6 +67,7 @@ export default {
             {class: Lantern, id: "lamp", args: [0x857070, 30, 1, ], location: [-49, 23, 37], name: "lantern"},
             {class: Stairs, id: "stairs", args: [10,12,2, new CANNON.Vec3(-45,-0.6,102.75)], location: [-46,0,94], name: "stairs"},
             {class: Stairs, id: "stairs", args: [10,12,2, new CANNON.Vec3(45,-0.6,102.75)], location: [-46,0,94], name: "stairs"},
+            {class: Altar, id: "altar", args: [], location: [0,12,-5], name: "altar" },
         ]
     }
 }

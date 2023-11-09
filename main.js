@@ -13,6 +13,7 @@ import Pea_Shooter from './weapons/pea_shooter.js';
 import makeRamp from './helpers/makeRamp.js';
 import makeRoom from './helpers/makeRoom.js';
 import makeDoor from './helpers/makeDoor.js';
+import makeAltar from './helpers/makeAltar.js';
 
 import map_functions from "./map.js";
 import waves from "./waves.js";
@@ -31,6 +32,7 @@ import Rifle from './weapons/rifle.js';
 import Key from './items/key.js';
 import Light_armor from "./armor/light_armor.js"
 import Heavy_Armor from './armor/heavy_armor.js';
+import Altar from './constructs/altar.js';
 
 
 
@@ -59,7 +61,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
-let turnOffSpawn = false;
+let turnOffSpawn = true;
 
 
 
@@ -895,7 +897,19 @@ let buildConstructs = (construct) => {
   else if(construct.class == Lantern) { 
     con.mesh.position.set(construct.location[0], construct.location[1], construct.location[2]);
     scene.add(con.mesh);
-  } else {
+  } else if(construct.class == Altar) {
+    console.log(con.mesh);
+    con.group.position.set(construct.location[0],construct.location[1],construct.location[2]);
+    con.group.children[0].position.y = 0.25;
+    con.group.children[1].position.y = 1.5;
+    con.group.children[2].position.y = 3.5;
+    con.body.position.copy(con.mesh.position);
+    // con.mesh.position.y = 3.5;
+
+    scene.add(con.group);
+    world.addBody(con.body);
+  }
+  else {
     con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
     con.mesh.position.copy(con.body.position);
     con.body.userData.isInteractable = true;
@@ -909,6 +923,14 @@ let buildConstructs = (construct) => {
   
 }
 
+
+// let [altar, body] = makeAltar();
+// console.log(altar);
+// // altar.position.set(0, 0, 5);
+// body.userData.construct_id = 10;
+// altar.userData.edgeMesh.position.copy(altar.children[2].position)
+// scene.add(altar);
+// constructs.push({construct_id: 10, object: altar});
 
 map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
 map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
@@ -1077,6 +1099,7 @@ let checkInteractable = () => {
       edgeMesh.userData.createdAt = time;
       interactionMeshes.push({mesh: edgeMesh, meshToTrack: intersections[0].object, createdAt: time})
       scene.add(edgeMesh);
+      // console.log(edgeMesh)
       updateInteractUI(true, intersections[0].object)
     } else {
       updateInteractUI(false);
@@ -1568,6 +1591,19 @@ let updateGame = () => {
   PLAYER.body.applyForce(gravityForce, PLAYER.body.position);
 }
 
+
+// let sinWave = () => {
+//   interactionMeshes.forEach((object, i) => {
+//     let t = Date.now();
+
+//   })
+// }
+
+// setInterval(() => {
+//   // f(t) = A * sin(2PI * f * t + phase)
+
+// },1000)
+
 let updateItems = () => {
   active_items.forEach((item, i) => {
     item.item.mesh.position.copy(item.item.body.position);
@@ -1580,9 +1616,15 @@ let updateItems = () => {
   })
 
   interactionMeshes.forEach((mesh, i) => {
-    mesh.mesh.position.copy(mesh.meshToTrack.position);
-    mesh.mesh.rotation.copy(mesh.meshToTrack.rotation)
-  })
+    if(mesh.meshToTrack.userData.isChild) {
+      let position = new THREE.Vector3(mesh.meshToTrack.parent.position.x + mesh.meshToTrack.position.x,mesh.meshToTrack.parent.position.y + mesh.meshToTrack.position.y,mesh.meshToTrack.parent.position.z + mesh.meshToTrack.position.z)
+      mesh.mesh.position.copy(position)
+      mesh.mesh.rotation.copy(mesh.meshToTrack.rotation);
+    } else {
+      mesh.mesh.position.copy(mesh.meshToTrack.position);
+      mesh.mesh.rotation.copy(mesh.meshToTrack.rotation);
+    }
+    })
 }
 
 let updateEnemyPhysics = () => {
@@ -1642,6 +1684,10 @@ let updateConstructs = () => {
     if(constructs[i].object.toBeDeleted) {
       scene.remove(constructs[i].object.mesh);
       world.remove(constructs[i].object.body);
+    } else if (constructs[i].object.toBeWaved) {
+      let v = 0.3 * Math.sin((2*Math.PI) * 15 * (Date.now()/50000) + 1);
+      // console.log(v)
+      constructs[i].object.mesh.position.y = 4 + v;
     }
   }
 }

@@ -27,7 +27,7 @@ export default (width, height, rotate90=false) => {
   doorBody.userData = { collisionClass: 'door', mesh: doorMesh }
 
   let edgeGeo = new THREE.EdgesGeometry(wallGeometry);
-  var edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff }); // You can customize the color and linewidth
+  var edgeMat = new THREE.LineBasicMaterial({ color: 0xffffff });
   var edgeMesh = new THREE.LineSegments(edgeGeo, edgeMat);
 
   doorMesh.userData.edgeMesh = edgeMesh;
