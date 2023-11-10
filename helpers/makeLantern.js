@@ -3,7 +3,7 @@ import * as CANNON from "cannon";
 
 export default (color, brightness, falloff) => {
   let textureLoader = new THREE.TextureLoader();
-  let texture = textureLoader.load('../lamp.jpg');
+  let texture = textureLoader.load('https://sl-gaming.s3.amazonaws.com/inv-assets/lamp.jpg');
   let material = new THREE.MeshBasicMaterial({ map: texture });
   let materials = [
     material, // right side

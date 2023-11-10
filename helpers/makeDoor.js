@@ -6,7 +6,7 @@ export default (width, height, rotate90=false) => {
   const thickness = 0.1;
 
   const textureLoader = new THREE.TextureLoader();
-  const texture = textureLoader.load('../door.jpg');
+  const texture = textureLoader.load('https://sl-gaming.s3.amazonaws.com/inv-assets/door.jpg');
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
 

@@ -17,7 +17,7 @@ export default (position, options) => {
   // Create floor
   if(options.walls.floor) {
     const floorTextureLoader = new THREE.TextureLoader();
-    const floorTexture = floorTextureLoader.load(options.textureOveride ? options.textureOveride : '../floor_02.jpg');
+    const floorTexture = floorTextureLoader.load(options.textureOveride ? options.textureOveride : 'https://sl-gaming.s3.amazonaws.com/inv-assets/floor_02.jpg');
     floorTexture.wrapS = THREE.RepeatWrapping;
     floorTexture.wrapT = THREE.RepeatWrapping;
 
@@ -49,7 +49,7 @@ export default (position, options) => {
   const wallThickness = 0.1;
 
   const textureLoader = new THREE.TextureLoader();
-  const texture = textureLoader.load(options.textureOveride ? options.textureOveride : '../wall_01.jpg');
+  const texture = textureLoader.load(options.textureOveride ? options.textureOveride : 'https://sl-gaming.s3.amazonaws.com/inv-assets/wall_01.jpg');
   texture.wrapS = THREE.RepeatWrapping;
   texture.wrapT = THREE.RepeatWrapping;
 

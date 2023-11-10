@@ -43,7 +43,7 @@ import * as CANNON from "cannon";
 export default (width=10, height=12, angle=0, position=new CANNON.Vec3(0,0,0), ) => {
 
     const textureLoader = new THREE.TextureLoader();
-    const texture = textureLoader.load('../stairs.jpg');
+    const texture = textureLoader.load('https://sl-gaming.s3.amazonaws.com/inv-assets/stairs.jpg');
     texture.wrapS = THREE.RepeatWrapping;
     texture.wrapT = THREE.RepeatWrapping;
     const repeatX = width; 
