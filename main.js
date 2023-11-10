@@ -56,12 +56,14 @@ let meshToRemove = [];
 let enemies = {}
 let wave = 1;
 // let waves = [];
+let currentWorld = 1;
 
 let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
 let turnOffSpawn = true;
+let worldBuildMode = false;
 
 
 
@@ -474,7 +476,8 @@ let create_player_body = (player) => {
   playerMaterial.restitution = 0;
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
   playerBody.material = playerMaterial;
-  playerBody.position.set(0,14,0);
+  let l = map_functions.world_1.spawnLocation;
+  playerBody.position.set(l[0],l[1],l[2]);
   playerBody.collisionFilterGroup = 1;
   playerBody.collisionFilterMask = 1;
   playerBody.userData = {collisionClass: "player", id: `${player.id}`}
@@ -903,7 +906,7 @@ let buildConstructs = (construct) => {
     con.group.children[0].position.y = 0.25;
     con.group.children[1].position.y = 1.5;
     con.group.children[2].position.y = 3.5;
-    con.body.position.copy(con.mesh.position);
+    con.body.position.copy(con.group.position);
     // con.mesh.position.y = 3.5;
 
     scene.add(con.group);
@@ -922,6 +925,8 @@ let buildConstructs = (construct) => {
   constructs.push({construct_id: construct.id, object: con});
   
 }
+
+
 
 
 // let [altar, body] = makeAltar();
@@ -1200,6 +1205,9 @@ let onKeyDown = (event) => {
     case "o":
       override = !override;
       break
+    case "j":
+      toggleBuildMode();
+      break
 
   }
 }
@@ -1240,6 +1248,18 @@ let playerInputs = () => {
     velocity.copy(direction).applyEuler(rotation).multiplyScalar(PLAYER.acc);
     let c_velocity = new CANNON.Vec3().copy(velocity);
     PLAYER.move_player(c_velocity)
+  }
+}
+
+let worldLight = new THREE.AmbientLight(0xFFFFFF, 10);
+worldLight.position.set(0,50,0);
+
+let toggleBuildMode = () => {
+  worldBuildMode = !worldBuildMode;
+  if(worldBuildMode) {
+    scene.add(worldLight)
+  } else {
+    scene.remove(worldLight)
   }
 }
 
@@ -1583,7 +1603,7 @@ let updateGame = () => {
   playerMesh.quaternion.copy(PLAYER.body.quaternion);
 
   camera.position.copy(PLAYER.body.position);
-  camera.position.y += 2.5 //+ 40;
+  camera.position.y += worldBuildMode==true ? 42.5 : 2.5;
 
   let playerGravity = new CANNON.Vec3(0, -500, 0);
   let gravityForce = new CANNON.Vec3();
@@ -1688,6 +1708,9 @@ let updateConstructs = () => {
       let v = 0.3 * Math.sin((2*Math.PI) * 15 * (Date.now()/50000) + 1);
       // console.log(v)
       constructs[i].object.mesh.position.y = 4 + v;
+      constructs[i].object.mesh.children.forEach(child => {
+        child.position.y = 3.9 + v;
+      })
     }
   }
 }
