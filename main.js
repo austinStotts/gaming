@@ -1741,7 +1741,10 @@ setInterval(() => {
   // console.log("VELOCITY: ",PLAYER.body.velocity);
   // console.log("\nCAMERA", camera.position.y);
   // console.log("FLOOR: ", floorBody.position);
-}, 3000);
+  console.log(camera);
+  console.log(scene)
+  console.log(world)
+}, 10000);
 
 init();
 animate();
