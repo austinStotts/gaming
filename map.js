@@ -5,6 +5,7 @@ import Door from "./constructs/door";
 import Lantern from './constructs/lantern';
 import Stairs from './constructs/stairs';
 import Altar from './constructs/altar';
+import Platform from './constructs/platform';
 
 let makeWallObject = (a) => {
     return {
@@ -19,7 +20,7 @@ let makeWallObject = (a) => {
 export default {
     world_1:{
         world: 1,
-        spawnLocation: [0,2,100],
+        spawnLocation: [-45,12,95],
         structures:[
             [new THREE.Vector3(0,12,10), (Math.PI / 2)*2, {w: 20, h: 12, d: 30, color: 0x595151, walls: makeWallObject([1,1,1,0,1])}],
             [new THREE.Vector3(0,12,-10), 0, {w: 20, h: 12, d: 10, color: 0x00FF00, walls: makeWallObject([0,0,0,0,1])}],
@@ -39,9 +40,9 @@ export default {
             [new THREE.Vector3(55,12,-80), (Math.PI / 2), {w: 10, h: 12, d: 30, color: 0x595151, walls: makeWallObject([1,1,0,0,1])}],
             [new THREE.Vector3(-45,12,-60), ((Math.PI / 2)*2), {w: 10, h: 12, d: 9.8, color: 0x595151, walls: makeWallObject([0,1,1,0,1])}],
             [new THREE.Vector3(-55,6,80), ((Math.PI / 2)*3), {w: 30, h: 18, d: 30, color: 0x595151, walls: makeWallObject([1,1,1,0,1])}],
-            [new THREE.Vector3(55,6,-80), ((Math.PI / 2)), {w: 30, h: 6, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,1])}],
-            [new THREE.Vector3(65,12,-80), ((Math.PI / 2)), {w: 10, h: 12, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,1])}],
-            [new THREE.Vector3(45,12,-80), ((Math.PI / 2)), {w: 10, h: 12, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,1])}],
+            [new THREE.Vector3(55,6,-80.1), ((Math.PI / 2)), {w: 30, h: 6, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,0])}],
+            [new THREE.Vector3(65,12,-80.1), ((Math.PI / 2)), {w: 10, h: 12, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,0])}],
+            [new THREE.Vector3(45,12,-80.1), ((Math.PI / 2)), {w: 10, h: 12, d: 0.1, color: 0x595151, walls: makeWallObject([0,0,1,0,0])}],
         ],
         ceilings: [
             [new THREE.Vector3(0,24,-40), 0, {w: 20, h: 12, d: 70, color: 0x595151, walls: makeWallObject([0,0,0,0,1])}],
@@ -81,6 +82,14 @@ export default {
             {class: Stairs, id: "stairs", args: [10,12,2, new CANNON.Vec3(45,-0.6,102.75)], location: [-46,0,94], name: "stairs"},
             {class: Stairs, id: "stairs", args: [10,12,3, new CANNON.Vec3(92.8,-0.6,55)], location: [95,5.4,52], name: "stairs"},
             {class: Altar, id: "altar", args: [], location: [0,12,-5], name: "altar" },
+            {class: Platform, id: "platform", args: [20, 4, 30], location: [0,0,120], name: "platform"},
+            {class: Platform, id: "platform", args: [10, 1.5, 10], location: [-45,10,145], name: "platform"},
+            {class: Platform, id: "platform", args: [10, 1.5, 10], location: [45,10,145], name: "platform"},
+            {class: Platform, id: "platform", args: [10, 1.5, 5], location: [-38,6,147.5], name: "platform"},
+            {class: Platform, id: "platform", args: [10, 1.5, 5], location: [38,6,147.5], name: "platform"},
+            {class: Platform, id: "platform", args: [5, 1.5, 5], location: [-30,4,147.5], name: "platform"},
+            {class: Platform, id: "platform", args: [5, 1.5, 5], location: [30,4,147.5], name: "platform"},
+            {class: Platform, id: "platform", args: [50, 5, 10], location: [0,0,147.5], name: "platform"},
         ]
     }
 }

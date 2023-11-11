@@ -33,6 +33,7 @@ import Key from './items/key.js';
 import Light_armor from "./armor/light_armor.js"
 import Heavy_Armor from './armor/heavy_armor.js';
 import Altar from './constructs/altar.js';
+import Platform from './constructs/platform.js';
 
 
 
@@ -62,7 +63,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
-let turnOffSpawn = true;
+let turnOffSpawn = false;
 let worldBuildMode = false;
 
 
@@ -326,7 +327,7 @@ let updateWave = () => {
 }
 
 let handleDMG = (enemy, player) => {
-  player.take_damage(enemy.damage);
+  PLAYER.take_damage(enemy.damage);
   updateHP(player);
   showDamage();
 }
@@ -911,6 +912,11 @@ let buildConstructs = (construct) => {
 
     scene.add(con.group);
     world.addBody(con.body);
+  } else if(construct.class == Platform) {
+    con.mesh.position.set(construct.location[0],construct.location[1],construct.location[2]);
+    con.body.position.copy(con.mesh.position);
+    scene.add(con.mesh);
+    world.addBody(con.body)
   }
   else {
     con.body.position.set(construct.location[0],construct.location[1],construct.location[2]);
@@ -1040,7 +1046,7 @@ let checkBishopFire = (time) => {
 let moveBishop = (bishop) => {
   let result = new CANNON.RaycastResult();
   world.rayTest(PLAYER.body.position, bishop.body.position, result);
-  if(result.distance < 20) {
+  if(result.distance < 10) {
     bishop.fireTime = Date.now();
     let direction = new THREE.Vector3();
     camera.getWorldPosition(direction);
@@ -1049,7 +1055,7 @@ let moveBishop = (bishop) => {
     bishop.body.velocity.set(velocity.x, -1, velocity.z);
   } else if(result.distance > 100) {
     // out of range, do nothing
-  } else if(result.distance > 40) {
+  } else if(result.distance > 60) {
     bishop.fireTime = Date.now();
     let direction = new THREE.Vector3();
     camera.getWorldPosition(direction);
