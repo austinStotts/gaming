@@ -35,6 +35,8 @@ import Heavy_Armor from './armor/heavy_armor.js';
 import Altar from './constructs/altar.js';
 import Platform from './constructs/platform.js';
 
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
 
 
 
@@ -63,7 +65,7 @@ let active_items = [];
 let itemsToRemove = [];
 let isTakingDamage = false;
 let override = false;
-let turnOffSpawn = false;
+let turnOffSpawn = true;
 let worldBuildMode = false;
 
 
@@ -846,6 +848,37 @@ let build = (position, angle, options) => {
   })
   scene.add(roomGroup);
 }
+
+let modelLoader = new GLTFLoader();
+let weaponModel;
+modelLoader.load("./shotgun.glb", (model) => {
+  console.log(model)
+  weaponModel = model.scene;
+  model.scene.position.set(0,13, -6);
+  scene.add(model.scene)
+});
+
+let moveWeapon = () => {
+  if(weaponModel != undefined) {
+    
+    weaponModel.position.copy(camera.position);
+    let holder = new THREE.Quaternion();
+    camera.getWorldQuaternion(holder);
+    holder.normalize();
+    // holder.invert();
+
+    weaponModel.quaternion.copy(holder);
+    // let holder2 = new THREE.Vector3();
+    // camera.getWorldDirection(holder2);
+    // weaponModel.rotation.copy(holder2)
+    
+    weaponModel.rotation.y = Math.PI;
+    weaponModel.position.x += 1;
+    weaponModel.position.z -= 5;
+    weaponModel.position.y -= 3.5;
+  }
+}
+
 
 let buildCeilings = (position, angle, options) => {
       // CEILINGS
@@ -1748,6 +1781,7 @@ const animate = () => {
   updateGame();
   updateItems();
   checkHP();
+  moveWeapon()
   // keepBishopsUpright();
   updateConstructs();
 

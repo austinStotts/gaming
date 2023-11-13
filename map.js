@@ -20,7 +20,7 @@ let makeWallObject = (a) => {
 export default {
     world_1:{
         world: 1,
-        spawnLocation: [-45,12,95],
+        spawnLocation: [0,14,0],
         structures:[
             [new THREE.Vector3(0,12,10), (Math.PI / 2)*2, {w: 20, h: 12, d: 30, color: 0x595151, walls: makeWallObject([1,1,1,0,1])}],
             [new THREE.Vector3(0,12,-10), 0, {w: 20, h: 12, d: 10, color: 0x00FF00, walls: makeWallObject([0,0,0,0,1])}],
