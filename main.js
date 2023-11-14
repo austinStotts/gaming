@@ -39,6 +39,30 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 
 
+// HELLO!
+// THIS IS A WORK IN PROGRESS
+// TODAY IS 11/14/23 BUT I HAVE BEEN WORKING FOR A FEW MONTHS NOW
+// 
+// THINGS TO DO: || 1 - 5 || 1 BEING VERY IMPORTANT
+// ---------------------------------
+// .2. REFACTOR ENEMY SPAWNS TO USE A WORLD LOCATION AND NOT A PER WAVE LOCATION
+//    - AS IN, ENEMIES ARE TIED TO THE WORLD AND ALL SPAWN AT ONCE - NOT IN A WAVE BY WAVE METHOD
+// 
+// .3. REFINE ENEMY BEHAVIORS AND ENHANCE LEVEL DESIGN
+// .3. IN SAME - ENHANCE WORLD GENERATION TO MAKE INTERESTING LEVELS
+//
+// .1. AUTO DETECT WINDOW SIZE CHANGE AND UPDATE CAMERA/SCENE
+//
+// .2. ALLOW FOR WORLD EVENTS TO CHANGE ENVIRMENT INDEPENDANT OF LITERAL INTERACTIONS
+//     - AS IN, ALLOW FOR THINGS TO HAPPEN WITHOUT INTERACTING DIRECLY WITH THE OBJECT BODY/MESH
+//     - EX. KILLING A SPECIFIC ENEMY SPAWNS ANOTHER OR OPENS A DOOR
+//     - THIS COULD BE ALL APART OF THE "WORLD" CLASS AND HAS BOOLS FOR DIFFERENT THINGS
+//
+//
+//
+
+
+
 
 // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // GLOBAL VARIABLES - needs cleanup
@@ -67,7 +91,8 @@ let isTakingDamage = false;
 let override = false;
 let turnOffSpawn = true;
 let worldBuildMode = false;
-
+let spawnItems = true;
+let buildWorld = true;
 
 
 
@@ -479,7 +504,7 @@ let create_player_body = (player) => {
   playerMaterial.restitution = 0;
   let playerBody = new CANNON.Body({ shape: shape, mass: 50, fixedRotation: true });
   playerBody.material = playerMaterial;
-  let l = map_functions.world_1.spawnLocation;
+  let l = map_functions.world_1.spawnLocation || [0,2,0];
   playerBody.position.set(l[0],l[1],l[2]);
   playerBody.collisionFilterGroup = 1;
   playerBody.collisionFilterMask = 1;
@@ -787,44 +812,23 @@ let dropItem = (item, position) => { // put item at any location
   scene.add(item.mesh);
 }
 
-dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
-dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
-dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
-dropItem(new Key('0001', "key to the storage room"), new CANNON.Vec3(0, 13, 10))
+if(spawnItems) {
+  dropItem(test_ammo, new CANNON.Vec3(2,13,-30))
+  dropItem(test_pack, new CANNON.Vec3(-2,13,-30))
+  dropItem(shotgunammo, new CANNON.Vec3(-77,13,26))
+  dropItem(new Key('0001', "key to the storage room"), new CANNON.Vec3(0, 13, 10))
+  dropItem(shotgun, new CANNON.Vec3(-77,13,36));
+  dropItem(heavyArmor, new CANNON.Vec3(0, 13, 14))
+}
 
-// dropItem(shotgun, new CANNON.Vec3(-77, 13, 37))
-dropItem(shotgun, new CANNON.Vec3(-77,13,36));
-dropItem(heavyArmor, new CANNON.Vec3(0, 13, 14))
 
 
-// dropItem(rfl, new CANNON.Vec3(2,1,2))
-// dropItem(pb, new CANNON.Vec3(4,1,4))
-// dropItem(energyammo, new CANNON.Vec3(0,1,0))
 
-// dropItem(test_pack1, new CANNON.Vec3(-2,1,-28))
-// dropItem(test_pack12, new CANNON.Vec3(-2,1,-26))
-// dropItem(test_pack123, new CANNON.Vec3(-2,1,-24))
 
 
 // ## ## ## ## ## ## ## ## ## ## ## ## ## ## ##
 // WORLD GEN
 
-// const light = new THREE.AmbientLight( 0x404040, 25 ); // soft white light
-// light.position.set(0,14,-7)
-// scene.add( light );
-
-// var l1 = new THREE.PointLight(0x707070, 25, 100, 0.5);
-// l1.position.set(0, 30, -45);
-// scene.add(l1);
-// var l2 = new THREE.PointLight(0x707070, 25, 100, 0.5);
-// l2.position.set(0, 30, 35);
-// scene.add(l2);
-// var l3 = new THREE.PointLight(0x707070, 10, 100, 0.5);
-// l3.position.set(-90, 30, 30);
-// scene.add(l3);
-// var l4 = new THREE.PointLight(0x707070, 10, 100, 0.5);
-// l4.position.set(-8, 24, -39);
-// scene.add(l4);
 
 let build = (position, angle, options) => {
   let roomGroup = makeRoom(position, options);
@@ -852,30 +856,65 @@ let build = (position, angle, options) => {
 let modelLoader = new GLTFLoader();
 let weaponModel;
 modelLoader.load("./shotgun.glb", (model) => {
-  console.log(model)
+  // console.log(model.scene);
   weaponModel = model.scene;
-  model.scene.position.set(0,13, -6);
-  scene.add(model.scene)
+  scene.add(model.scene);
+  // console.log(camera.children);
+  // console.log(camera.children);
 });
 
 let moveWeapon = () => {
   if(weaponModel != undefined) {
-    
-    weaponModel.position.copy(camera.position);
-    let holder = new THREE.Quaternion();
-    camera.getWorldQuaternion(holder);
-    holder.normalize();
-    // holder.invert();
 
-    weaponModel.quaternion.copy(holder);
-    // let holder2 = new THREE.Vector3();
-    // camera.getWorldDirection(holder2);
-    // weaponModel.rotation.copy(holder2)
+
+
+    // console.log(weaponModel.position);
+    // weaponModel.position.copy(camera.position);
+    let newQuat = new THREE.Vector3();
+    camera.getWorldDirection(newQuat);
+    let testModel = new THREE.Mesh();
+    weaponModel.quaternion.setFromRotationMatrix(camera.matrixWorld);
+    // weaponModel.rotation.y = Math.PI/2;
+    weaponModel.rotateY(135);
+
     
-    weaponModel.rotation.y = Math.PI;
-    weaponModel.position.x += 1;
-    weaponModel.position.z -= 5;
-    weaponModel.position.y -= 3.5;
+
+    let vector = new THREE.Vector3();
+    vector.setFromMatrixPosition(camera.matrixWorld); // need to add specific offsets to weapon class and use them here.
+    vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 0).multiplyScalar(2));
+    vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 1).multiplyScalar(-3.55));
+    vector.add(new THREE.Vector3().setFromMatrixColumn(camera.matrix, 2).multiplyScalar(-6));
+    weaponModel.position.copy(vector);
+
+
+    // let cameraQuat = new THREE.Quaternion();
+    // camera.getWorldQuaternion(cameraQuat);
+    // console.log(`camera quat: \nx:${cameraQuat.x} \ny:${cameraQuat.y} \nz:${cameraQuat.z} \nw:${cameraQuat.w}`);
+
+    // let cameraPos = new THREE.Vector3();
+    // camera.getWorldPosition(cameraPos);
+
+    // let cameraDir = new THREE.Vector3();
+    // camera.getWorldDirection(cameraDir);
+    // console.log(`camera direction: \nx:${cameraDir.x} \ny:${cameraDir.y} \nz:${cameraDir.z}`);
+
+    // let quatDir = new THREE.Quaternion();
+    // // quatDir.setFromUnitVectors(camera.position, cameraDir);
+
+    // // x - left/right
+    // // y - up/down
+    // // z - left/right
+    // cameraQuat.invert();
+    // weaponModel.quaternion.copy(cameraQuat);
+    // // weaponModel.quaternion.x = weaponModel.quaternion.x*-1;
+    // // console.log(`dummy direction: \nx:${quatDir.x} \ny:${quatDir.y} \nz:${quatDir.z}`);
+    // weaponModel.position.copy(cameraDir);
+    // weaponModel.rotation.y = (weaponModel.rotation.y + Math.PI) * -1;
+    // weaponModel.position.x += 1;
+    // weaponModel.position.z -= 5;
+    // weaponModel.position.y -= 3.5;
+  } else {
+    console.log("UN-defined");
   }
 }
 
@@ -976,9 +1015,16 @@ let buildConstructs = (construct) => {
 // scene.add(altar);
 // constructs.push({construct_id: 10, object: altar});
 
-map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
-map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
-map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
+if(buildWorld) {
+  map_functions.world_1.structures.forEach(args => { build(args[0], args[1], args[2]) });
+  map_functions.world_1.ceilings.forEach(args => { buildCeilings(args[0], args[1], args[2]) });
+  map_functions.world_1.constructs.forEach(args => { buildConstructs(args) });
+} else {
+  let superLamp = new Lantern(0xFFFFFF, 100, 1);
+  superLamp.mesh.position.set(0,30,0)
+  scene.add(superLamp.mesh);
+}
+
 
 
 
@@ -1637,7 +1683,7 @@ let animateHitmarker = (crit=false) => {
 // runs every frame to do all sorts of things
 
 let updateGame = () => {
-  PLAYER.body.position.y += 0.004;
+  // PLAYER.body.position.y += 0.004;
   playerMesh.position.copy(PLAYER.body.position);
   playerMesh.quaternion.copy(PLAYER.body.quaternion);
 
@@ -1804,9 +1850,9 @@ setInterval(() => {
   // console.log("VELOCITY: ",PLAYER.body.velocity);
   // console.log("\nCAMERA", camera.position.y);
   // console.log("FLOOR: ", floorBody.position);
-  console.log(camera);
-  console.log(scene)
-  console.log(world)
+  // console.log(camera);
+  // console.log(scene)
+  // console.log(world)
 }, 10000);
 
 init();
