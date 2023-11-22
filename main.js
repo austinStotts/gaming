@@ -134,6 +134,7 @@ window.help = () => {
   `)
 }
 
+
 // window.position = (x, y, z) => {
 //   if(typeof x == "number" && typeof y == "number" && typeof z == "number") {
 //     camera.position.set(x, y, z)
@@ -459,6 +460,7 @@ const renderer = new THREE.WebGLRenderer({
 	// stencil: false,
 	// depth: false,
 });
+
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.getContext().linewidth = 6;
 document.body.appendChild(renderer.domElement);
@@ -1812,6 +1814,17 @@ scene.add(playerMesh);
 // const composer = new EffectComposer(renderer);
 // composer.addPass(new RenderPass(scene, camera));
 // composer.addPass(new EffectPass(camera, new BloomEffect()));
+
+
+// resize the renderer/camera when the window size changes
+window.onresize = () => {
+  // console.log("RERERERE RESIZE!!")
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  // console.log(window.innerWidth / window.innerHeight)
+  camera.aspect = (window.innerHeight/window.innerWidth);
+
+}
+
 
 // _________________________________________
 // ||||||||||||||||||||||||||||||||||||||||
