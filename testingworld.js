@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import * as CANNON from "cannon";
+import { threeToCannon, ShapeType } from 'three-to-cannon';
 // import { BloomEffect, EffectComposer, EffectPass, RenderPass } from "postprocessing";
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
@@ -92,7 +93,7 @@ let override = false;
 let turnOffSpawn = true;
 let worldBuildMode = false;
 let spawnItems = true;
-let buildWorld = true;
+let buildWorld = false;
 
 
 
@@ -219,7 +220,6 @@ let init = () => {
   world.addBody(floorBody);
   create_player_body(PLAYER)
   build_inventory();
-  update_inv_ui();
 }
 
 // ## ## ## ## ## ## ## ## ## ## ##
@@ -929,6 +929,70 @@ let toggleBuildMode = () => {
     scene.remove(worldLight)
   }
 }
+
+
+
+
+
+// | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | 
+//  | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | 
+//   | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | 
+//    | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | 
+//     | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | \ | 
+//                 NEW WOLRD GEN
+//                USING IMPORTED MODELS
+
+
+
+let roomLoader = new GLTFLoader();
+roomLoader.load("./room v1.glb", (room) => {
+  console.log(room)
+  scene.add(room.scene);
+  const result = threeToCannon(room.scene.children[0]);
+  const {shape, offset, quaternion} = result;
+  let roomBody = new CANNON.Body({ mass: 0 });
+  // Add the shape to a CANNON.Body.
+  roomBody.addShape(shape, offset, quaternion);
+  roomBody.userData = {collisionClass: "floor"  };
+  // roomBody.position.copy(room.scene.position);
+  room.scene.position.copy(roomBody.position);
+  world.addBody(roomBody)
+});
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
